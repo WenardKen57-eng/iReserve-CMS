@@ -49,6 +49,8 @@ import AdminInquiryQuote from "../pages/admin/AdminInquiryQuote";
 import ManagerDashboard from "../pages/manager/ManagerDashboard";
 import ManagerBookings from "../pages/manager/ManagerBookings";
 import ManagerStaff from "../pages/manager/ManagerStaff";
+import ManagerMessagesList from "../pages/manager/ManagerMessagesList";
+import ManagerMessagesChat from "../pages/manager/ManagerMessagesChat";
 import StaffDashboard from "../pages/staff/StaffDashboard";
 
 const adminRoles = ["admin"];
@@ -134,6 +136,8 @@ export default function AppRoutes() {
         <Route path="/manager/dashboard" element={<ProtectedRoute allowedRoles={managerRoles}><ManagerDashboard /></ProtectedRoute>} />
         <Route path="/manager/bookings" element={<ProtectedRoute allowedRoles={managerRoles}><ManagerBookings /></ProtectedRoute>} />
         <Route path="/manager/staff" element={<ProtectedRoute allowedRoles={managerRoles}><ManagerStaff /></ProtectedRoute>} />
+        <Route path="/manager/messages" element={<ProtectedRoute allowedRoles={managerRoles}><ManagerMessagesList /></ProtectedRoute>} />
+        <Route path="/manager/messages/:id" element={<ProtectedRoute allowedRoles={managerRoles}><ManagerMessagesChat /></ProtectedRoute>} />
 
         {/* Staff (protected by role) */}
         <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={staffRoles}><StaffDashboard /></ProtectedRoute>} />

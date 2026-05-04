@@ -2,11 +2,17 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const morgan = require("morgan");
+const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/error.middleware");
+const User = require("./models/User");
+const Conversation = require("./models/Conversation");
+const { canAccessConversation } = require("./utils/chatAccess");
 
 const authRoutes = require("./routes/auth.routes");
 const inquiryRoutes = require("./routes/inquiry.routes");
@@ -23,6 +29,7 @@ const ratingRoutes = require("./routes/rating.routes");
 const systemLogRoutes = require("./routes/systemlog.routes");
 const userRoutes = require("./routes/user.routes");
 const quoteRoutes = require("./routes/quote.routes");
+const messageRoutes = require("./routes/message.routes");
 
 connectDB();
 
@@ -32,7 +39,11 @@ app.use(cors({
 	origin: allowedOrigins,
 	credentials: true
 }));
-app.use(express.json());
+app.use(express.json({
+	verify: (req, res, buf) => {
+		req.rawBody = buf.toString();
+	}
+}));
 app.use(morgan("dev"));
 
 app.get("/", (req, res) => res.send("iReserve API Running ✅"));
@@ -52,8 +63,68 @@ app.use("/api/ratings", ratingRoutes);
 app.use("/api/systemlogs", systemLogRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/quotes", quoteRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server on port ${PORT}`));
+const server = http.createServer(app);
+
+const io = new Server(server, {
+	cors: {
+		origin: allowedOrigins,
+		credentials: true
+	}
+});
+
+app.set("io", io);
+
+io.use(async (socket, next) => {
+	try {
+		const token = socket.handshake.auth?.token;
+		if (!token) return next(new Error("Missing token"));
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const user = await User.findById(decoded.id).select("-password");
+		if (!user) return next(new Error("User not found"));
+		socket.data.user = user;
+		return next();
+	} catch (err) {
+		return next(new Error("Invalid token"));
+	}
+});
+
+io.on("connection", (socket) => {
+	socket.on("conversation:join", async (conversationId, ack) => {
+		try {
+			const conversation = await Conversation.findById(conversationId);
+			if (!conversation || !canAccessConversation(socket.data.user, conversation)) {
+				if (ack) ack({ ok: false, message: "Forbidden" });
+				return;
+			}
+			const room = `conversation:${conversationId}`;
+			socket.join(room);
+			if (ack) ack({ ok: true });
+		} catch (err) {
+			if (ack) ack({ ok: false, message: "Join failed" });
+		}
+	});
+
+	socket.on("conversation:leave", (conversationId) => {
+		socket.leave(`conversation:${conversationId}`);
+	});
+
+	socket.on("typing:start", (conversationId) => {
+		const payload = {
+			user_id: socket.data.user?._id,
+			name: socket.data.user?.full_name || socket.data.user?.email || "User"
+		};
+		socket.to(`conversation:${conversationId}`).emit("typing:start", payload);
+	});
+
+	socket.on("typing:stop", (conversationId) => {
+		const payload = { user_id: socket.data.user?._id };
+		socket.to(`conversation:${conversationId}`).emit("typing:stop", payload);
+	});
+});
+
+server.listen(PORT, () => console.log(` Server on port ${PORT}`));

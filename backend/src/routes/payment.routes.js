@@ -4,6 +4,8 @@ const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
 router.post("/", protect, ctrl.create);
+router.post("/checkout", protect, ctrl.createCheckout);
+router.post("/webhook", ctrl.handleWebhook);
 router.get("/", protect, authorize("admin", "manager"), ctrl.getAll);
 router.get("/me", protect, ctrl.getMine);
 router.get("/:id", protect, ctrl.getById);

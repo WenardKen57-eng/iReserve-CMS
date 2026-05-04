@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import api from "../api/axios";
+import { resetSocket } from "../api/socket";
 
 export const AuthContext = createContext();
 
@@ -24,6 +25,7 @@ export default function AuthProvider({ children }) {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
+    resetSocket();
     return data.user;
   };
 
@@ -31,6 +33,7 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    resetSocket();
   };
 
   return (

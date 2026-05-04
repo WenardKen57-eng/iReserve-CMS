@@ -4,10 +4,18 @@ const PaymentSchema = new mongoose.Schema({
   booking_id: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
   customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   amount: Number,
+  currency: { type: String, default: "PHP" },
   payment_type: String,
   method: String,
   proof_url: String,
-  status: { type: String, default: "pending" }
+  status: { type: String, default: "pending" },
+  gateway: { type: String, default: "manual" },
+  gateway_checkout_id: String,
+  gateway_payment_intent_id: String,
+  gateway_reference: String,
+  checkout_url: String,
+  paid_at: Date,
+  metadata: mongoose.Schema.Types.Mixed
 }, { timestamps: true });
 
 module.exports = mongoose.model("Payment", PaymentSchema);

@@ -16,9 +16,11 @@ const stepLabels = {
   review: "Review & Payment"
 };
 
-const furnitureOptions = ["Couch", "Balloon", "Cake Table", "Round Tables", "Monoblock Chairs", "Other"];
-const diningOptions = ["Food Warmer", "Serving Spoons", "Plates", "Glasses", "Ice Cooler"];
-const addOnOptions = ["Standee", "Host", "Clown", "Cake", "Videoke"];
+const inventoryCategoryKeywords = {
+  furniture: ["furniture"],
+  dining: ["dining", "services inventory"],
+  addOns: ["adds on", "add ons"]
+};
 
 export default function BookingWizard() {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ export default function BookingWizard() {
   const [step, setStep] = useState(0);
   const today = new Date().toISOString().split("T")[0];
   const [menuItems, setMenuItems] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
   const [error, setError] = useState("");
   const [availability, setAvailability] = useState({ status: "idle", message: "" });
   const { notify } = useToast();
@@ -108,6 +111,36 @@ export default function BookingWizard() {
       .then((res) => setMenuItems(res.data))
       .catch(() => setMenuItems([]));
   }, []);
+
+  useEffect(() => {
+    CustomerAPI.getInventory()
+      .then((res) => setInventoryItems(res.data || []))
+      .catch(() => setInventoryItems([]));
+  }, []);
+
+  const normalizeCategory = (value) => String(value || "").trim().toLowerCase();
+  const matchesCategory = (category, keywords) => keywords.some((keyword) => category.includes(keyword));
+  const inventoryByCategory = useMemo(() => {
+    const grouped = {
+      furniture: [],
+      dining: [],
+      addOns: []
+    };
+
+    inventoryItems.forEach((item) => {
+      if (!item || item.available === false) return;
+      const category = normalizeCategory(item.category);
+      if (matchesCategory(category, inventoryCategoryKeywords.furniture)) {
+        grouped.furniture.push(item);
+      } else if (matchesCategory(category, inventoryCategoryKeywords.dining)) {
+        grouped.dining.push(item);
+      } else if (matchesCategory(category, inventoryCategoryKeywords.addOns)) {
+        grouped.addOns.push(item);
+      }
+    });
+
+    return grouped;
+  }, [inventoryItems]);
 
   useEffect(() => {
     if (!form.event_date || !form.start_time || !form.duration_hours) {
@@ -537,46 +570,58 @@ export default function BookingWizard() {
               <div>
                 <h4>Furniture</h4>
                 <div className="service-list">
-                  {furnitureOptions.map((item) => (
-                    <label key={item} className="choice">
-                      <input
-                        type="checkbox"
-                        checked={form.additional_services.includes(item)}
-                        onChange={() => toggleService(item)}
-                      />
-                      {item}
-                    </label>
-                  ))}
+                  {inventoryByCategory.furniture.length ? (
+                    inventoryByCategory.furniture.map((item) => (
+                      <label key={item._id || item.item_name} className="choice">
+                        <input
+                          type="checkbox"
+                          checked={form.additional_services.includes(item.item_name)}
+                          onChange={() => toggleService(item.item_name)}
+                        />
+                        {item.item_name}
+                      </label>
+                    ))
+                  ) : (
+                    <span className="quote-muted">No furniture inventory available.</span>
+                  )}
                 </div>
               </div>
               <div>
                 <h4>Dining Inventory</h4>
                 <div className="service-list">
-                  {diningOptions.map((item) => (
-                    <label key={item} className="choice">
-                      <input
-                        type="checkbox"
-                        checked={form.additional_services.includes(item)}
-                        onChange={() => toggleService(item)}
-                      />
-                      {item}
-                    </label>
-                  ))}
+                  {inventoryByCategory.dining.length ? (
+                    inventoryByCategory.dining.map((item) => (
+                      <label key={item._id || item.item_name} className="choice">
+                        <input
+                          type="checkbox"
+                          checked={form.additional_services.includes(item.item_name)}
+                          onChange={() => toggleService(item.item_name)}
+                        />
+                        {item.item_name}
+                      </label>
+                    ))
+                  ) : (
+                    <span className="quote-muted">No dining inventory available.</span>
+                  )}
                 </div>
               </div>
               <div>
                 <h4>Adds On</h4>
                 <div className="service-list">
-                  {addOnOptions.map((item) => (
-                    <label key={item} className="choice">
-                      <input
-                        type="checkbox"
-                        checked={form.additional_services.includes(item)}
-                        onChange={() => toggleService(item)}
-                      />
-                      {item}
-                    </label>
-                  ))}
+                  {inventoryByCategory.addOns.length ? (
+                    inventoryByCategory.addOns.map((item) => (
+                      <label key={item._id || item.item_name} className="choice">
+                        <input
+                          type="checkbox"
+                          checked={form.additional_services.includes(item.item_name)}
+                          onChange={() => toggleService(item.item_name)}
+                        />
+                        {item.item_name}
+                      </label>
+                    ))
+                  ) : (
+                    <span className="quote-muted">No add-on inventory available.</span>
+                  )}
                 </div>
               </div>
             </div>

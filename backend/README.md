@@ -34,3 +34,45 @@
 ## Notes
 - CORS is configured to allow only the frontend URL in production.
 - API URLs are set via environment variables for flexibility.
+
+---
+
+## PayMongo Integration
+
+### Required Backend Environment Variables
+- `PAYMONGO_SECRET_KEY`: Your PayMongo secret key (`sk_test_...` or `sk_live_...`).
+- `PAYMONGO_WEBHOOK_SECRET`: Webhook signing secret from the PayMongo webhook endpoint.
+- `FRONTEND_URL`: Already used for checkout success/cancel redirects.
+
+### Backend Endpoints Added
+- `POST /api/payments/checkout` (auth required): creates a PayMongo Checkout Session.
+- `POST /api/payments/webhook` (public): receives PayMongo webhook events.
+
+### Example Request for Checkout
+`POST /api/payments/checkout`
+
+```json
+{
+  "booking_id": "BOOKING_OBJECT_ID",
+  "amount": 5000,
+  "payment_type": "deposit",
+  "payment_method_types": ["gcash", "paymaya", "card"],
+  "success_url": "http://localhost:5173/customer/payments?status=success",
+  "cancel_url": "http://localhost:5173/customer/payments?status=cancelled"
+}
+```
+
+### Frontend Usage
+- Call `CustomerAPI.createPaymentCheckout(payload)`.
+- Redirect the browser to `response.data.checkout_url`.
+
+### Webhook Setup in PayMongo
+1. Create a webhook endpoint in PayMongo dashboard: `https://YOUR_BACKEND_DOMAIN/api/payments/webhook`.
+2. Subscribe to at least:
+   - `checkout_session.payment.paid`
+   - `checkout_session.payment.failed`
+3. Save the webhook secret to `PAYMONGO_WEBHOOK_SECRET`.
+
+### What Happens on Paid Webhook
+- Local payment status is updated to `approved`.
+- Booking `payment_status` is synced to `approved`.

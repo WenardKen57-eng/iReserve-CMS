@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Calendar, Users } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, MessageSquare } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import logo from "../../assets/images/logo.jpg";
 
@@ -49,6 +49,10 @@ export default function ManagerSidebar() {
         <NavLink to="/manager/staff" className={linkClass}>
           <Users className="h-5 w-5 shrink-0" />
           <span>Staff List</span>
+        </NavLink>
+        <NavLink to="/manager/messages" className={linkClass}>
+          <MessageSquare className="h-5 w-5 shrink-0" />
+          <span>Messages</span>
         </NavLink>
       </nav>
 

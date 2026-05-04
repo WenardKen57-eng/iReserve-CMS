@@ -217,15 +217,14 @@
 /* Chat */
 .chat-bubble {
   background: #f3f4f6;
-  padding: 8px 12px;
-  border-radius: 8px;
-  width: fit-content;
-  margin: 6px 0;
+  color: #0b1220;
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 70%;
 }
 
 .chat-bubble.right {
-  margin-left: auto;
-  background: #1e3a8a;
+  background: #0b1220;
   color: #fff;
 }
 
