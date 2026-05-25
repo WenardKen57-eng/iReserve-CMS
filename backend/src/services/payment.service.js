@@ -117,7 +117,9 @@ exports.createCheckoutSession = async ({
 
 exports.verifyWebhookSignature = ({ rawBody, signatureHeader }) => {
 	const webhookSecret = process.env.PAYMONGO_WEBHOOK_SECRET;
-	if (!webhookSecret) return true;
+	if (!webhookSecret) {
+		return process.env.NODE_ENV !== "production";
+	}
 
 	const { timestamp, signature } = parsePayMongoSignature(signatureHeader);
 	if (!timestamp || !signature) return false;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
 import logo from "../../assets/images/logo.jpg";
 import ConfirmDialog from "../common/ConfirmDialog";
+import NotificationBell from "../common/NotificationBell";
 
 const navItems = [
   { to: "/customer/dashboard", label: "Dashboard", desc: "Overview of your events" },
@@ -33,7 +34,11 @@ export default function CustomerDashboardLayout({ title, subtitle, children }) {
           role="button"
           tabIndex={0}
         >
-          <div className="brand-mark">Caezelle's</div>
+          <img src={logo} alt="Caezelle's logo" className="customer-brand-logo" />
+          <div className="customer-brand-text">
+            <div className="customer-brand-title">Caezelle's Catering</div>
+            <div className="customer-brand-subtitle">Customer Portal</div>
+          </div>
         </div>
         <nav className="customer-nav">
           {navItems.map((item) => (
@@ -59,11 +64,9 @@ export default function CustomerDashboardLayout({ title, subtitle, children }) {
         <header className="customer-topbar">
           <div className="topbar-left">
             <button className="topbar-back" type="button" onClick={() => navigate(-1)}>←</button>
-            <img src={logo} alt="Caezelle's logo" className="h-8 w-8 rounded-2xl object-cover" />
-            <div className="topbar-title">Caezelle's Catering</div>
           </div>
           <div className="topbar-actions">
-            <button className="topbar-icon" type="button" aria-label="Notifications">🔔</button>
+            <NotificationBell />
             <button className="topbar-link" type="button" onClick={() => setShowLogoutConfirm(true)}>Sign out</button>
           </div>
         </header>

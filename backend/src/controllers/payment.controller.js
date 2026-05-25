@@ -1,6 +1,7 @@
 const Payment = require("../models/Payment");
 const Booking = require("../models/Booking");
 const asyncHandler = require("../utils/asyncHandler");
+const { createNotification } = require("../utils/notify");
 const {
 	createCheckoutSession,
 	verifyWebhookSignature,
@@ -9,10 +10,24 @@ const {
 	isFailedEvent
 } = require("../services/payment.service");
 
-exports.create = asyncHandler(async (req, res) => res.status(201).json(await Payment.create(req.body)));
+exports.create = asyncHandler(async (req, res) => {
+	if (req.user?.role === "customer") {
+		return res.status(403).json({ message: "Forbidden" });
+	}
+	res.status(201).json(await Payment.create(req.body));
+});
 exports.getAll = asyncHandler(async (req, res) => res.json(await Payment.find().populate("booking_id customer_id")));
 exports.getMine = asyncHandler(async (req, res) => res.json(await Payment.find({ customer_id: req.user._id }).populate("booking_id customer_id")));
-exports.getById = asyncHandler(async (req, res) => res.json(await Payment.findById(req.params.id).populate("booking_id customer_id")));
+exports.getById = asyncHandler(async (req, res) => {
+	if (req.user?.role === "customer") {
+		const payment = await Payment.findOne({ _id: req.params.id, customer_id: req.user._id })
+			.populate("booking_id customer_id");
+		if (!payment) return res.status(404).json({ message: "Payment not found" });
+		return res.json(payment);
+	}
+
+	res.json(await Payment.findById(req.params.id).populate("booking_id customer_id"));
+});
 exports.update = asyncHandler(async (req, res) => res.json(await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 exports.remove = asyncHandler(async (req, res) => { await Payment.findByIdAndDelete(req.params.id); res.json({ message: "Deleted" }); });
 
@@ -138,6 +153,24 @@ exports.handleWebhook = asyncHandler(async (req, res) => {
 			payment_status: payment.status,
 			payment_method: payment.method
 		});
+	}
+
+	if (payment.customer_id) {
+		const io = req.app.get("io");
+		const statusLabel = payment.status === "approved" ? "Payment approved" : "Payment update";
+		const body = payment.status === "approved"
+			? "Your payment has been approved."
+			: payment.status === "rejected"
+				? "Your payment failed. Please try again."
+				: "Your payment is being processed.";
+		await createNotification({
+			userId: payment.customer_id,
+			title: statusLabel,
+			body,
+			type: payment.status === "approved" ? "success" : payment.status === "rejected" ? "error" : "info",
+			link: "/customer/payments",
+			meta: { payment_id: payment._id, booking_id: payment.booking_id }
+		}, io);
 	}
 
 	res.status(200).json({ ok: true });

@@ -4,6 +4,7 @@ const Booking = require("../models/Booking");
 const Inquiry = require("../models/Inquiry");
 const asyncHandler = require("../utils/asyncHandler");
 const { canAccessConversation } = require("../utils/chatAccess");
+const { createNotification } = require("../utils/notify");
 
 const ensureBookingConversations = async (bookings) => {
   const tasks = bookings
@@ -141,6 +142,33 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   const io = req.app.get("io");
   if (io) {
     io.to(`conversation:${conversation._id}`).emit("message:new", populated);
+
+    const senderId = String(req.user._id);
+    const customerId = conversation.customer_id ? String(conversation.customer_id) : null;
+    const managerId = conversation.manager_id ? String(conversation.manager_id) : null;
+    const senderName = req.user.full_name || req.user.email || "Someone";
+
+    if (customerId && senderId !== customerId) {
+      await createNotification({
+        userId: customerId,
+        title: "New message",
+        body: `${senderName} sent you a message.`,
+        type: "info",
+        link: "/customer/messages",
+        meta: { conversation_id: conversation._id }
+      }, io);
+    }
+
+    if (managerId && senderId !== managerId) {
+      await createNotification({
+        userId: managerId,
+        title: "New message",
+        body: `${senderName} sent you a message.`,
+        type: "info",
+        link: "/manager/messages",
+        meta: { conversation_id: conversation._id }
+      }, io);
+    }
   }
 
   res.status(201).json(populated);

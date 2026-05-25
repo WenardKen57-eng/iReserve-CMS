@@ -1,6 +1,7 @@
 const Booking = require("../models/Booking");
 const Inquiry = require("../models/Inquiry");
 const asyncHandler = require("../utils/asyncHandler");
+const { createNotification } = require("../utils/notify");
 
 const parseTimeToMinutes = (timeValue) => {
 	if (!timeValue) return null;
@@ -187,6 +188,15 @@ exports.createFromInquiry = asyncHandler(async (req, res) => {
 
 	const booking = await Booking.create(bookingPayload);
 	await Inquiry.findByIdAndUpdate(inquiry._id, { status: "approved" }, { new: true });
+	const io = req.app.get("io");
+	await createNotification({
+		userId: booking.customer_id,
+		title: "Booking created",
+		body: "Your booking has been created from your inquiry.",
+		type: "success",
+		link: "/customer/bookings",
+		meta: { booking_id: booking._id }
+	}, io);
 	res.status(201).json(booking);
 });
 
@@ -199,6 +209,13 @@ exports.getMine = asyncHandler(async (req, res) => {
 });
 
 exports.getById = asyncHandler(async (req, res) => {
+	if (req.user?.role === "customer") {
+		const booking = await Booking.findOne({ _id: req.params.id, customer_id: req.user._id })
+			.populate("customer_id package_id manager_id staff_ids inquiry_id");
+		if (!booking) return res.status(404).json({ message: "Booking not found" });
+		return res.json(booking);
+	}
+
 	res.json(await Booking.findById(req.params.id).populate("customer_id package_id manager_id staff_ids inquiry_id"));
 });
 
@@ -240,7 +257,27 @@ exports.update = asyncHandler(async (req, res) => {
 		});
 	}
 
-	res.json(await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+	const updated = await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+	if (updated?.customer_id && req.user?.role !== "customer") {
+		const statusChanged = current.status !== updated.status;
+		const paymentChanged = current.payment_status !== updated.payment_status;
+		if (statusChanged || paymentChanged) {
+			const io = req.app.get("io");
+			await createNotification({
+				userId: updated.customer_id,
+				title: "Booking update",
+				body: statusChanged
+					? `Your booking status is now ${updated.status}.`
+					: `Payment status is now ${updated.payment_status}.`,
+				type: statusChanged ? "info" : "success",
+				link: "/customer/bookings",
+				meta: { booking_id: updated._id }
+			}, io);
+		}
+	}
+
+	res.json(updated);
 });
 
 exports.remove = asyncHandler(async (req, res) => {

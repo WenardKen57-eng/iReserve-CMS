@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { CustomerAPI } from "../../api/customer";
 import AuthVerifyEmailForm from "../../components/forms/AuthVerifyEmailForm";
+import logo from "../../assets/images/logo.jpg";
 
 export default function VerifyEmail() {
   const location = useLocation();
@@ -51,18 +52,29 @@ export default function VerifyEmail() {
 
   return (
     <div className="auth-page">
-      <div className="auth-right">
-        <AuthVerifyEmailForm
-          email={email}
-          otp={otp}
-          status={status}
-          justRegistered={justRegistered}
-          token={token}
-          onEmailChange={(e) => setEmail(e.target.value)}
-          onOtpChange={(e) => setOtp(e.target.value)}
-          onSubmitOtp={submitOtp}
-          onResendOtp={resendOtp}
-        />
+      <div className="auth-left">
+        <div className="logo-card">
+          <img src={logo} alt="Caezelle's logo" className="object-cover w-full h-full rounded-2xl" />
+        </div>
+        <h2 className="mt-6 text-3xl font-semibold">Confirm your account in minutes.</h2>
+        <p className="mt-4 text-sm text-white/70">
+          Verify your email to unlock bookings, messages, and payment tracking.
+        </p>
+      </div>
+      <div className="bg-white auth-right">
+        <div className="p-10 surface">
+          <AuthVerifyEmailForm
+            email={email}
+            otp={otp}
+            status={status}
+            justRegistered={justRegistered}
+            token={token}
+            onEmailChange={(e) => setEmail(e.target.value)}
+            onOtpChange={(e) => setOtp(e.target.value)}
+            onSubmitOtp={submitOtp}
+            onResendOtp={resendOtp}
+          />
+        </div>
       </div>
     </div>
   );

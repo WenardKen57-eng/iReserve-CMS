@@ -30,6 +30,7 @@ const systemLogRoutes = require("./routes/systemlog.routes");
 const userRoutes = require("./routes/user.routes");
 const quoteRoutes = require("./routes/quote.routes");
 const messageRoutes = require("./routes/message.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 connectDB();
 
@@ -64,6 +65,7 @@ app.use("/api/systemlogs", systemLogRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/quotes", quoteRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
 
@@ -94,6 +96,8 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
+	socket.join(`user:${socket.data.user._id}`);
+
 	socket.on("conversation:join", async (conversationId, ack) => {
 		try {
 			const conversation = await Conversation.findById(conversationId);
