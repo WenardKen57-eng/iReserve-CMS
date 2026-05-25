@@ -5,6 +5,7 @@ export const CustomerAPI = {
   getPackages: () => api.get("/packages"),
   getPackageById: (id) => api.get(`/packages/${id}`),
   getMenu: () => api.get("/menu"),
+  getInventory: () => api.get("/inventory/public"),
   getGallery: () => api.get("/gallery"),
   getRatings: () => api.get("/ratings/public"),
 
@@ -31,6 +32,7 @@ export const CustomerAPI = {
 
   // payments
   getPayments: () => api.get("/payments/me"),
+  createPaymentCheckout: (data) => api.post("/payments/checkout", data),
 
   // custom quote
   submitQuote: (data) => api.post("/quotes", data) // ensure this exists in backend

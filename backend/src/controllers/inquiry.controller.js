@@ -1,5 +1,6 @@
 const Inquiry = require("../models/Inquiry");
 const asyncHandler = require("../utils/asyncHandler");
+const { createNotification } = require("../utils/notify");
 
 exports.create = asyncHandler(async (req, res) => {
   const payload = {
@@ -20,11 +21,41 @@ exports.getMine = asyncHandler(async (req, res) => {
 });
 
 exports.getById = asyncHandler(async (req, res) => {
+  if (req.user?.role === "customer") {
+    const inquiry = await Inquiry.findOne({ _id: req.params.id, customer_id: req.user._id })
+      .populate("customer_id package_id");
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    return res.json(inquiry);
+  }
+
   res.json(await Inquiry.findById(req.params.id).populate("customer_id package_id"));
 });
 
 exports.update = asyncHandler(async (req, res) => {
-  res.json(await Inquiry.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+  const current = await Inquiry.findById(req.params.id);
+  if (!current) return res.status(404).json({ message: "Inquiry not found" });
+
+  const updated = await Inquiry.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+  if (updated?.customer_id && req.user?.role !== "customer") {
+    const statusChanged = current.status !== updated.status;
+    const quoteChanged = current.quote_amount !== updated.quote_amount || current.quote_notes !== updated.quote_notes;
+    if (statusChanged || quoteChanged) {
+      const io = req.app.get("io");
+      await createNotification({
+        userId: updated.customer_id,
+        title: "Inquiry update",
+        body: statusChanged
+          ? `Your inquiry status is now ${updated.status}.`
+          : "Your inquiry quote details have been updated.",
+        type: statusChanged ? "info" : "success",
+        link: "/customer/inquiries",
+        meta: { inquiry_id: updated._id }
+      }, io);
+    }
+  }
+
+  res.json(updated);
 });
 
 exports.updateMineStatus = asyncHandler(async (req, res) => {
@@ -38,6 +69,15 @@ exports.updateMineStatus = asyncHandler(async (req, res) => {
 
   inquiry.status = req.body.status;
   await inquiry.save();
+  const io = req.app.get("io");
+  await createNotification({
+    userId: req.user._id,
+    title: "Inquiry cancelled",
+    body: "Your inquiry has been cancelled.",
+    type: "info",
+    link: "/customer/inquiries",
+    meta: { inquiry_id: inquiry._id }
+  }, io);
   res.json(inquiry);
 });
 

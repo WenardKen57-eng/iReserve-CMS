@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import AdminLayout from "../../components/layout/AdminLayout";
+import ManagerLayout from "../../components/layout/ManagerLayout";
 import { getConversation, getMessages, sendMessage } from "../../api/messages";
 import useToast from "../../hooks/useToast";
 import { AuthContext } from "../../context/AuthContext";
@@ -24,13 +24,10 @@ const getTitle = (conversation) => {
   if (conversation?.booking_id?.event_type) {
     return `${conversation.booking_id.event_type} - ${formatShortDate(conversation.booking_id.event_date)}`;
   }
-  if (conversation?.inquiry_id?.event_type) {
-    return `${conversation.inquiry_id.event_type} - ${formatShortDate(conversation.inquiry_id.event_date)}`;
-  }
-  return "Support Chat";
+  return "Event Chat";
 };
 
-export default function AdminMessagesChat() {
+export default function ManagerMessagesChat() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
@@ -135,7 +132,7 @@ export default function AdminMessagesChat() {
     : "";
 
   return (
-    <AdminLayout>
+    <ManagerLayout>
       <div className="chat-shell">
         <div className="chat-header">
           <div>
@@ -146,8 +143,8 @@ export default function AdminMessagesChat() {
           </div>
           <div className="chat-event-card">
             <span className="chat-event-pill">Event Chat</span>
-            <span>{conversation?.booking_id ? "Assigned Manager" : "Support"}</span>
-            <button className="btn-outline" type="button" onClick={() => navigate("/admin/messages")}>Back</button>
+            <span>Assigned Customer</span>
+            <button className="btn-outline" type="button" onClick={() => navigate("/manager/messages")}>Back</button>
           </div>
         </div>
 
@@ -200,6 +197,6 @@ export default function AdminMessagesChat() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </ManagerLayout>
   );
 }

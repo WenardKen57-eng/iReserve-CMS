@@ -3,6 +3,7 @@ const ctrl = require("../controllers/inventory.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
+router.get("/public", ctrl.getPublic);
 router.post("/", protect, authorize("admin"), ctrl.create);
 router.get("/", protect, authorize("admin"), ctrl.getAll);
 router.get("/:id", protect, authorize("admin"), ctrl.getById);

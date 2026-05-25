@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "../../components/layout/AdminLayout";
+import ManagerLayout from "../../components/layout/ManagerLayout";
 import { listConversations } from "../../api/messages";
 import useToast from "../../hooks/useToast";
 
@@ -12,7 +12,7 @@ const formatDate = (value) => {
 };
 
 const getShortCode = (conversation) => {
-  const sourceId = conversation?.booking_id?._id || conversation?.inquiry_id?._id || conversation?._id;
+  const sourceId = conversation?.booking_id?._id || conversation?._id;
   if (!sourceId) return "";
   return sourceId.slice(-6).toUpperCase();
 };
@@ -21,18 +21,13 @@ const getTitle = (conversation) => {
   if (conversation?.booking_id?.event_type) {
     return `${conversation.booking_id.event_type} - ${formatDate(conversation.booking_id.event_date)}`;
   }
-  if (conversation?.inquiry_id?.event_type) {
-    return `${conversation.inquiry_id.event_type} - ${formatDate(conversation.inquiry_id.event_date)}`;
-  }
-  return "Support Chat";
+  return "Event Chat";
 };
 
 const getCode = (conversation) => {
   const code = getShortCode(conversation);
   if (!code) return "";
-  if (conversation?.booking_id) return `EVT-${code}`;
-  if (conversation?.inquiry_id) return `INQ-${code}`;
-  return `CHAT-${code}`;
+  return `EVT-${code}`;
 };
 
 const getInitials = (conversation) => {
@@ -43,7 +38,7 @@ const getInitials = (conversation) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-export default function AdminMessagesList() {
+export default function ManagerMessagesList() {
   const navigate = useNavigate();
   const { notify } = useToast();
   const [threads, setThreads] = useState([]);
@@ -66,7 +61,7 @@ export default function AdminMessagesList() {
   }, [notify]);
 
   return (
-    <AdminLayout>
+    <ManagerLayout>
       <h1>Messages</h1>
       <div className="chat-list">
         {loading && <div className="chat-list-item">Loading conversations...</div>}
@@ -77,11 +72,11 @@ export default function AdminMessagesList() {
           <div
             key={thread._id}
             className="chat-list-item"
-            onClick={() => navigate(`/admin/messages/${thread._id}`)}
+            onClick={() => navigate(`/manager/messages/${thread._id}`)}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
-              if (event.key === "Enter") navigate(`/admin/messages/${thread._id}`);
+              if (event.key === "Enter") navigate(`/manager/messages/${thread._id}`);
             }}
           >
             <div className="chat-list-left">
@@ -96,6 +91,6 @@ export default function AdminMessagesList() {
           </div>
         ))}
       </div>
-    </AdminLayout>
+    </ManagerLayout>
   );
 }

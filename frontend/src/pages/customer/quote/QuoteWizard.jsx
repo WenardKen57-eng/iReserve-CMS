@@ -127,7 +127,7 @@ export default function QuoteWizard() {
     full_name: user?.full_name || "",
     email: user?.email || "",
     phone: "",
-    contact_method: "email",
+    contact_method: ["email"],
     best_time_to_call: "",
     inspiration_links: "",
     attachments: [],
@@ -235,6 +235,10 @@ export default function QuoteWizard() {
       form.venue_size && `Venue size: ${form.venue_size}`
     ].filter(Boolean).join("\n");
 
+    const contactMethods = Array.isArray(form.contact_method)
+      ? form.contact_method
+      : [form.contact_method].filter(Boolean);
+
     return {
       customer_id: form.customer_id,
       event_type: getEventTypeValue(),
@@ -262,7 +266,7 @@ export default function QuoteWizard() {
       contact_last_name: contactLastName,
       contact_email: form.email,
       contact_phone: form.phone,
-      contact_method: form.contact_method,
+      contact_method: contactMethods.join(", ") || undefined,
       status: "pending"
     };
   };
@@ -647,73 +651,9 @@ export default function QuoteWizard() {
                 {currentStep === "Delivery Address" && (
                   <>
                     <div className="booking-card-header">
-                      <h3>Delivery Address</h3>
+                      <h3>Delivery Details</h3>
                     </div>
-                    <div className="booking-grid">
-                      <label className="field">
-                        <span>Province</span>
-                        <select value={form.province} disabled>
-                          <option value={BATANGAS_PROVINCE}>{BATANGAS_PROVINCE}</option>
-                        </select>
-                        {errors.province && <p className="auth-error">{errors.province}</p>}
-                      </label>
-                      <label className="field">
-                        <span>Municipality</span>
-                        <select
-                          value={form.municipality}
-                          onChange={(e) => setForm({ ...form, municipality: e.target.value, barangay: "" })}
-                        >
-                          <option value="">Select Municipality</option>
-                          {municipalities.map((name) => (
-                            <option key={name} value={name}>{name}</option>
-                          ))}
-                        </select>
-                        {errors.municipality && <p className="auth-error">{errors.municipality}</p>}
-                      </label>
-                      <label className="field">
-                        <span>Barangay</span>
-                        <select
-                          value={form.barangay}
-                          disabled={!form.municipality}
-                          onChange={(e) => setForm({ ...form, barangay: e.target.value })}
-                        >
-                          <option value="">Select Barangay</option>
-                          {barangays.map((name) => (
-                            <option key={name} value={name}>{name}</option>
-                          ))}
-                        </select>
-                        {errors.barangay && <p className="auth-error">{errors.barangay}</p>}
-                      </label>
-                      <label className="field">
-                        <span>Street Name</span>
-                        <input placeholder="Purok 4" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
-                        {errors.street && <p className="auth-error">{errors.street}</p>}
-                      </label>
-                      <label className="field">
-                        <span>Zip Code</span>
-                        <input placeholder="3125" value={form.zip_code} onChange={(e) => setForm({ ...form, zip_code: e.target.value })} />
-                        {errors.zip_code && <p className="auth-error">{errors.zip_code}</p>}
-                      </label>
-                      <label className="field">
-                        <span>Landmark</span>
-                        <input placeholder="Near 7/11" value={form.landmark} onChange={(e) => setForm({ ...form, landmark: e.target.value })} />
-                      </label>
-                    </div>
-
                     <div className="quote-section">
-                      <h4>Delivery Schedule</h4>
-                      <div className="booking-grid">
-                        <label className="field">
-                          <span>Delivery Date</span>
-                          <input type="date" min={today} value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} />
-                          {errors.delivery_date && <p className="auth-error">{errors.delivery_date}</p>}
-                        </label>
-                        <label className="field">
-                          <span>Preferred Delivery Time</span>
-                          <input type="time" value={form.delivery_time} onChange={(e) => setForm({ ...form, delivery_time: e.target.value })} />
-                          {errors.delivery_time && <p className="auth-error">{errors.delivery_time}</p>}
-                        </label>
-                      </div>
                       <div className="booking-toggle">
                         <p>Delivery Method</p>
                         <div className="choice-row">
@@ -737,31 +677,102 @@ export default function QuoteWizard() {
                           </label>
                         </div>
                       </div>
-                      <div className="booking-grid">
-                        <label className="field">
-                          <span>Pickup Date</span>
-                          <input
-                            type="date"
-                            min={today}
-                            value={form.pickup_date}
-                            disabled={form.delivery_method !== "pickup"}
-                            onChange={(e) => setForm({ ...form, pickup_date: e.target.value })}
-                          />
-                          {errors.pickup_date && <p className="auth-error">{errors.pickup_date}</p>}
-                        </label>
-                        <label className="field">
-                          <span>Pickup Time</span>
-                          <input
-                            type="time"
-                            value={form.pickup_time}
-                            disabled={form.delivery_method !== "pickup"}
-                            onChange={(e) => setForm({ ...form, pickup_time: e.target.value })}
-                          />
-                          {errors.pickup_time && <p className="auth-error">{errors.pickup_time}</p>}
-                        </label>
-                      </div>
+                      {form.delivery_method === "delivery" && (
+                        <div className="booking-grid">
+                          <label className="field">
+                            <span>Province</span>
+                            <select value={form.province} disabled>
+                              <option value={BATANGAS_PROVINCE}>{BATANGAS_PROVINCE}</option>
+                            </select>
+                            {errors.province && <p className="auth-error">{errors.province}</p>}
+                          </label>
+                          <label className="field">
+                            <span>Municipality</span>
+                            <select
+                              value={form.municipality}
+                              onChange={(e) => setForm({ ...form, municipality: e.target.value, barangay: "" })}
+                            >
+                              <option value="">Select Municipality</option>
+                              {municipalities.map((name) => (
+                                <option key={name} value={name}>{name}</option>
+                              ))}
+                            </select>
+                            {errors.municipality && <p className="auth-error">{errors.municipality}</p>}
+                          </label>
+                          <label className="field">
+                            <span>Barangay</span>
+                            <select
+                              value={form.barangay}
+                              disabled={!form.municipality}
+                              onChange={(e) => setForm({ ...form, barangay: e.target.value })}
+                            >
+                              <option value="">Select Barangay</option>
+                              {barangays.map((name) => (
+                                <option key={name} value={name}>{name}</option>
+                              ))}
+                            </select>
+                            {errors.barangay && <p className="auth-error">{errors.barangay}</p>}
+                          </label>
+                          <label className="field">
+                            <span>Street Name</span>
+                            <input placeholder="Purok 4" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
+                            {errors.street && <p className="auth-error">{errors.street}</p>}
+                          </label>
+                          <label className="field">
+                            <span>Zip Code</span>
+                            <input placeholder="3125" value={form.zip_code} onChange={(e) => setForm({ ...form, zip_code: e.target.value })} />
+                            {errors.zip_code && <p className="auth-error">{errors.zip_code}</p>}
+                          </label>
+                          <label className="field">
+                            <span>Landmark</span>
+                            <input placeholder="Near 7/11" value={form.landmark} onChange={(e) => setForm({ ...form, landmark: e.target.value })} />
+                          </label>
+                        </div>
+                      )}
+                      {form.delivery_method === "pickup" ? (
+                        <>
+                          <h4>Pickup Schedule</h4>
+                          <div className="booking-grid">
+                            <label className="field">
+                              <span>Pickup Date</span>
+                              <input
+                                type="date"
+                                min={today}
+                                value={form.pickup_date}
+                                onChange={(e) => setForm({ ...form, pickup_date: e.target.value })}
+                              />
+                              {errors.pickup_date && <p className="auth-error">{errors.pickup_date}</p>}
+                            </label>
+                            <label className="field">
+                              <span>Pickup Time</span>
+                              <input
+                                type="time"
+                                value={form.pickup_time}
+                                onChange={(e) => setForm({ ...form, pickup_time: e.target.value })}
+                              />
+                              {errors.pickup_time && <p className="auth-error">{errors.pickup_time}</p>}
+                            </label>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h4>Delivery Schedule</h4>
+                          <div className="booking-grid">
+                            <label className="field">
+                              <span>Delivery Date</span>
+                              <input type="date" min={today} value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} />
+                              {errors.delivery_date && <p className="auth-error">{errors.delivery_date}</p>}
+                            </label>
+                            <label className="field">
+                              <span>Preferred Delivery Time</span>
+                              <input type="time" value={form.delivery_time} onChange={(e) => setForm({ ...form, delivery_time: e.target.value })} />
+                              {errors.delivery_time && <p className="auth-error">{errors.delivery_time}</p>}
+                            </label>
+                          </div>
+                        </>
+                      )}
                       <label className="field">
-                        <span>Delivery Instructions (Optional)</span>
+                        <span>{form.delivery_method === "pickup" ? "Pickup Instructions (Optional)" : "Delivery Instructions (Optional)"}</span>
                         <textarea
                           placeholder="Floor/unit number, gate color, parking notes, or access instructions"
                           value={form.delivery_instructions}
@@ -902,28 +913,25 @@ export default function QuoteWizard() {
                       <div className="choice-row">
                         <label className="choice">
                           <input
-                            type="radio"
-                            name="contact_method"
-                            checked={form.contact_method === "email"}
-                            onChange={() => setForm({ ...form, contact_method: "email" })}
+                            type="checkbox"
+                            checked={form.contact_method.includes("email")}
+                            onChange={() => toggleValue("contact_method", "email")}
                           />
                           Email
                         </label>
                         <label className="choice">
                           <input
-                            type="radio"
-                            name="contact_method"
-                            checked={form.contact_method === "phone"}
-                            onChange={() => setForm({ ...form, contact_method: "phone" })}
+                            type="checkbox"
+                            checked={form.contact_method.includes("phone")}
+                            onChange={() => toggleValue("contact_method", "phone")}
                           />
                           Phone
                         </label>
                         <label className="choice">
                           <input
-                            type="radio"
-                            name="contact_method"
-                            checked={form.contact_method === "sms"}
-                            onChange={() => setForm({ ...form, contact_method: "sms" })}
+                            type="checkbox"
+                            checked={form.contact_method.includes("sms")}
+                            onChange={() => toggleValue("contact_method", "sms")}
                           />
                           Text Message
                         </label>

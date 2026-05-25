@@ -108,7 +108,7 @@ export default function AdminSidebar() {
         </button>
       </div>
 
-      <nav className="flex flex-col flex-1 px-4 overflow-y-auto space-y-2 pb-6 pt-2" style={{ scrollbarWidth: "none" }}>
+      <nav className="flex flex-col flex-1 px-4 pt-2 pb-6 space-y-2 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
         
         
         <div className={`px-4 mb-2 text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold transition-opacity duration-300 ${isCollapsed ? "opacity-0 hidden" : "opacity-100 block"}`}>Menu</div>
@@ -249,15 +249,15 @@ export default function AdminSidebar() {
         )}
       </nav>
       
-      <div className="p-4 border-t border-white/5 mt-auto">
+      <div className="p-4 mt-auto border-t border-white/5">
         <div className={`flex items-center gap-3 p-2 rounded-2xl bg-white/5 transition-all ${isCollapsed ? "justify-center" : ""}`}>
-          <div className="grid shrink-0 w-10 h-10 bg-white rounded-full place-items-center text-ink-900 font-bold">
+          <div className="grid w-10 h-10 font-bold bg-white rounded-full shrink-0 place-items-center text-ink-900">
             {initials}
           </div>
           {!isCollapsed && (
             <div className="overflow-hidden">
               <strong className="block text-sm truncate">{user?.full_name || "Admin"}</strong>
-              <small className="text-xs text-slate-300 capitalize truncate">{user?.role || "admin"}</small>
+              <small className="text-xs capitalize truncate text-slate-300">{user?.role || "admin"}</small>
             </div>
           )}
         </div>
