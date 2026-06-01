@@ -22,3 +22,19 @@ exports.updateMe = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
   res.json(user);
 });
+
+exports.getCustomers = asyncHandler(async (req, res) => {
+  const customers = await User.find({ role: "customer" })
+    .select("full_name email phone is_active createdAt");
+  res.json(customers);
+});
+
+exports.updateStatus = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { is_active: Boolean(req.body.is_active) },
+    { new: true }
+  );
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json(user);
+});

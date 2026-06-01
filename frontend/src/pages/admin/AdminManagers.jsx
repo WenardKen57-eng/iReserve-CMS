@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminAPI } from "../../api/admin";
 import AdminLayout from "../../components/layout/AdminLayout";
 import Modal from "../../components/common/Modal";
@@ -8,12 +8,27 @@ import useToast from "../../hooks/useToast";
 
 export default function AdminManagers({ defaultTab = "managers" }) {
   const [staff, setStaff] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [show, setShow] = useState(false);
   const [tab, setTab] = useState(defaultTab);
   const [form, setForm] = useState({ role: "manager", is_active: true });
+  const [viewTarget, setViewTarget] = useState(null);
   const { notify } = useToast();
 
-  const load = () => AdminAPI.getStaff().then((res) => setStaff(Array.isArray(res.data) ? res.data : []));
+  const load = () => {
+    AdminAPI.getStaff()
+      .then((res) => setStaff(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setStaff([]));
+
+    AdminAPI.getCustomers()
+      .then((res) => setCustomers(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setCustomers([]));
+
+    AdminAPI.getBookings()
+      .then((res) => setBookings(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setBookings([]));
+  };
   useEffect(() => {
     load();
   }, []);
@@ -48,6 +63,7 @@ export default function AdminManagers({ defaultTab = "managers" }) {
   };
 
   const edit = (member) => {
+    if (tab === "customers") return;
     setForm({
       _id: member._id,
       full_name: member.full_name,
@@ -60,26 +76,39 @@ export default function AdminManagers({ defaultTab = "managers" }) {
     setShow(true);
   };
 
-  const remove = (id) =>
-    AdminAPI.deleteStaff(id)
+  const toggleStatus = (member) => {
+    const request = tab === "customers"
+      ? AdminAPI.updateCustomerStatus(member._id, { is_active: !member.is_active })
+      : AdminAPI.updateStaff(member._id, { is_active: !member.is_active });
+
+    request
       .then(() => {
-        notify("Account deleted.", "success");
+        notify(member.is_active ? "Account disabled." : "Account enabled.", "success");
         load();
       })
-      .catch((err) => notify(err.response?.data?.message || "We could not delete the account. Please try again.", "error"));
+      .catch((err) => notify(err.response?.data?.message || "We could not update the account. Please try again.", "error"));
+  };
 
   const managers = staff.filter((m) => m.role === "manager");
   const staffMembers = staff.filter((m) => m.role === "staff");
-  const mockManagers = [
-    { _id: "mock-1", full_name: "James Rodriguez", role: "manager", is_active: true },
-    { _id: "mock-2", full_name: "Patricia Lee", role: "manager", is_active: true }
-  ];
-  const mockStaff = [
-    { _id: "mock-3", full_name: "Anna Marie Lopez", role: "staff", is_active: true },
-    { _id: "mock-4", full_name: "John Dela Cruz", role: "staff", is_active: true }
-  ];
-  const rows = (tab === "managers" ? managers : staffMembers);
-  const list = rows.length > 0 ? rows : (tab === "managers" ? mockManagers : mockStaff);
+  const list = tab === "managers" ? managers : tab === "staff" ? staffMembers : customers;
+
+  const counts = useMemo(() => {
+    const next = { managers: {}, staff: {} };
+    bookings.forEach((booking) => {
+      if (booking.manager_id) {
+        const key = String(booking.manager_id._id || booking.manager_id);
+        next.managers[key] = (next.managers[key] || 0) + 1;
+      }
+      if (Array.isArray(booking.staff_ids)) {
+        booking.staff_ids.forEach((id) => {
+          const key = String(id?._id || id);
+          next.staff[key] = (next.staff[key] || 0) + 1;
+        });
+      }
+    });
+    return next;
+  }, [bookings]);
 
   return (
     <AdminLayout>
@@ -88,15 +117,18 @@ export default function AdminManagers({ defaultTab = "managers" }) {
           <h1>Manager and Staff Directory</h1>
           <p>Create and manage manager & staff accounts</p>
         </div>
-        <div className="admin-actions">
-          <button className="btn" onClick={() => { setTab("managers"); setForm({ role: "manager", is_active: true }); setShow(true); }}>+ Create Manager</button>
-          <button className="btn" onClick={() => { setTab("staff"); setForm({ role: "staff", is_active: true }); setShow(true); }}>+ Create Staff</button>
-        </div>
+        {tab !== "customers" && (
+          <div className="admin-actions">
+            <button className="btn" onClick={() => { setTab("managers"); setForm({ role: "manager", is_active: true }); setShow(true); }}>+ Create Manager</button>
+            <button className="btn" onClick={() => { setTab("staff"); setForm({ role: "staff", is_active: true }); setShow(true); }}>+ Create Staff</button>
+          </div>
+        )}
       </div>
 
       <div className="tab-row" style={{ marginBottom: "12px" }}>
         <button className={tab === "managers" ? "active" : ""} onClick={() => setTab("managers")}>Managers</button>
         <button className={tab === "staff" ? "active" : ""} onClick={() => setTab("staff")}>Staff</button>
+        <button className={tab === "customers" ? "active" : ""} onClick={() => setTab("customers")}>Customers</button>
       </div>
 
       <div className="admin-table-wrap">
@@ -104,8 +136,10 @@ export default function AdminManagers({ defaultTab = "managers" }) {
           list={list}
           tab={tab}
           onEdit={edit}
-          onRemove={remove}
+          onToggleStatus={toggleStatus}
+          onView={(member) => setViewTarget(member)}
         />
+        {list.length === 0 && <p className="dash-empty">No accounts found.</p>}
       </div>
 
       {show && (
@@ -117,6 +151,28 @@ export default function AdminManagers({ defaultTab = "managers" }) {
             onCancel={() => setShow(false)}
             onSubmit={submit}
           />
+        </Modal>
+      )}
+      {viewTarget && (
+        <Modal title="Account Details" onClose={() => setViewTarget(null)}>
+          <div className="admin-modal">
+            <div className="form-section">
+              <h4>{viewTarget.full_name || "Account"}</h4>
+              <p><strong>Role:</strong> {viewTarget.role || "customer"}</p>
+              <p><strong>Status:</strong> {viewTarget.is_active ? "Active" : "Inactive"}</p>
+              <p><strong>Email:</strong> {viewTarget.email || "-"}</p>
+              <p><strong>Phone:</strong> {viewTarget.phone || "-"}</p>
+              {viewTarget.role === "manager" && (
+                <p><strong>Active Events:</strong> {counts.managers[String(viewTarget._id)] || 0}</p>
+              )}
+              {viewTarget.role === "staff" && (
+                <p><strong>Assigned Events:</strong> {counts.staff[String(viewTarget._id)] || 0}</p>
+              )}
+            </div>
+            <div className="actions">
+              <button className="btn-outline" type="button" onClick={() => setViewTarget(null)}>Close</button>
+            </div>
+          </div>
         </Modal>
       )}
     </AdminLayout>

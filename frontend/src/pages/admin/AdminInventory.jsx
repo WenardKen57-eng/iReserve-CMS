@@ -10,6 +10,9 @@ export default function AdminInventory() {
   const [show, setShow] = useState(false);
   const [form, setForm] = useState({ available: true });
   const [activeView, setActiveView] = useState("card");
+  const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [bookings, setBookings] = useState([]);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
@@ -17,7 +20,10 @@ export default function AdminInventory() {
   });
   const { notify } = useToast();
 
-  const load = () => AdminAPI.getInventory().then((res) => setItems(Array.isArray(res.data) ? res.data : []));
+  const load = () =>
+    AdminAPI.getInventory()
+      .then((res) => setItems(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setItems([]));
   useEffect(() => {
     load();
   }, []);
@@ -56,27 +62,7 @@ export default function AdminInventory() {
       })
       .catch((err) => notify(err.response?.data?.message || "We could not update the inventory item. Please try again.", "error"));
 
-  const mockItems = [
-    { _id: "mock-1", item_name: "Couch", quantity: 10, category: "Event Setup & Furniture", available: true },
-    { _id: "mock-2", item_name: "Balloon", quantity: 100, category: "Event Setup & Furniture", available: true },
-    { _id: "mock-3", item_name: "Cake Table", quantity: 80, category: "Event Setup & Furniture", available: true },
-    { _id: "mock-4", item_name: "Round Table", quantity: 50, category: "Event Setup & Furniture", available: true },
-    { _id: "mock-5", item_name: "Monoblock Chairs", quantity: 300, category: "Event Setup & Furniture", available: true },
-
-    { _id: "mock-6", item_name: "Food Warmer", quantity: 50, category: "Dining & Services Inventory", available: true },
-    { _id: "mock-7", item_name: "Serving Spoons", quantity: 300, category: "Dining & Services Inventory", available: true },
-    { _id: "mock-8", item_name: "Plates", quantity: 300, category: "Dining & Services Inventory", available: true },
-    { _id: "mock-9", item_name: "Glasses", quantity: 300, category: "Dining & Services Inventory", available: true },
-    { _id: "mock-10", item_name: "Ice Cooler", quantity: 20, category: "Dining & Services Inventory", available: true },
-
-    { _id: "mock-11", item_name: "Standee", quantity: 5, category: "Adds On", available: true },
-    { _id: "mock-12", item_name: "Candy Corner", quantity: 5, category: "Adds On", available: true },
-    { _id: "mock-13", item_name: "Host", quantity: 5, category: "Adds On", available: true },
-    { _id: "mock-14", item_name: "Clown", quantity: 5, category: "Adds On", available: true },
-    { _id: "mock-15", item_name: "Cake", quantity: 10, category: "Adds On", available: true }
-  ];
-
-  const list = items.length > 0 ? items : mockItems;
+  const list = items;
 
   const viewGroups = [
     { key: "Event Setup & Furniture", title: "Event Setup & Furniture" },
@@ -103,6 +89,25 @@ export default function AdminInventory() {
       bucket[key].push(item);
     });
     return bucket;
+  }, [list]);
+
+  const filteredList = useMemo(() => {
+    const text = query.trim().toLowerCase();
+    return list.filter((item) => {
+      const matchesText = !text || `${item.item_name || ""} ${item.category || ""}`.toLowerCase().includes(text);
+      const matchesCategory = categoryFilter === "all" || normalizeCategory(item.category) === categoryFilter;
+      const matchesStatus = statusFilter === "all"
+        || (statusFilter === "available" && item.available !== false)
+        || (statusFilter === "unavailable" && item.available === false);
+      return matchesText && matchesCategory && matchesStatus;
+    });
+  }, [list, query, categoryFilter, statusFilter]);
+
+  const counts = useMemo(() => {
+    const total = list.length;
+    const available = list.filter((item) => item.available !== false).length;
+    const lowStock = list.filter((item) => Number(item.quantity || 0) > 0 && Number(item.quantity || 0) <= 10).length;
+    return { total, available, lowStock };
   }, [list]);
 
   useEffect(() => {
@@ -193,16 +198,50 @@ export default function AdminInventory() {
           </button>
         </div>
       </div>
+      <div className="admin-actions" style={{ marginBottom: "16px" }}>
+        <div className="admin-search">
+          <input placeholder="Search by item or category..." value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+        <select className="admin-filter" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <option value="all">All Categories</option>
+          <option value="Event Setup & Furniture">Event Setup & Furniture</option>
+          <option value="Dining & Services Inventory">Dining & Services Inventory</option>
+          <option value="Adds On">Adds On</option>
+        </select>
+        <select className="admin-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">All Statuses</option>
+          <option value="available">Available</option>
+          <option value="unavailable">Unavailable</option>
+        </select>
+      </div>
+
+      <div className="kpi-grid" style={{ marginBottom: "16px" }}>
+        <div className="kpi-card">
+          <h4>Total Items</h4>
+          <p className="kpi-value">{counts.total}</p>
+        </div>
+        <div className="kpi-card">
+          <h4>Available</h4>
+          <p className="kpi-value">{counts.available}</p>
+        </div>
+        <div className="kpi-card">
+          <h4>Low Stock</h4>
+          <p className="kpi-value">{counts.lowStock}</p>
+        </div>
+      </div>
 
       {activeView === "card" ? (
         <>
           <div className="inventory-section-title">Event Setup &amp; Needs</div>
+          {list.length === 0 && <p className="dash-empty">No inventory items yet.</p>}
 
           {viewGroups.map((g) => (
             <div key={g.key} className="inventory-group">
               <div className="inventory-group-title">{g.title}</div>
               <div className="inventory-grid">
-                {grouped[g.key].map((item) => (
+                {filteredList
+                  .filter((item) => normalizeCategory(item.category) === g.key)
+                  .map((item) => (
                   <div key={item._id} className="inventory-card">
                     <div className="inventory-card-head">
                       <div className="inventory-item-name">{item.item_name}</div>
@@ -210,8 +249,7 @@ export default function AdminInventory() {
                         <input
                           type="checkbox"
                           checked={item.available !== false}
-                          onChange={() => (item._id?.startsWith("mock-") ? null : toggleAvailability(item))}
-                          disabled={item._id?.startsWith("mock-")}
+                          onChange={() => toggleAvailability(item)}
                         />
                         <span className="slider" />
                       </label>
@@ -224,18 +262,16 @@ export default function AdminInventory() {
                       <button
                         type="button"
                         className="inv-action edit"
-                        onClick={() => (item._id?.startsWith("mock-") ? null : edit(item))}
+                        onClick={() => edit(item)}
                         aria-label="Edit"
-                        disabled={item._id?.startsWith("mock-")}
                       >
                         ✎
                       </button>
                       <button
                         type="button"
                         className="inv-action delete"
-                        onClick={() => (item._id?.startsWith("mock-") ? null : remove(item._id))}
+                        onClick={() => remove(item._id)}
                         aria-label="Delete"
-                        disabled={item._id?.startsWith("mock-")}
                       >
                         🗑
                       </button>

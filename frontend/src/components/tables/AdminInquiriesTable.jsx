@@ -55,9 +55,9 @@ export default function AdminInquiriesTable({ inquiries, onSelect, onQuote, onRe
                   <>
                     <button className="action-chip muted" type="button">Quoted</button>
                     <button className="action-chip" type="button" onClick={() => onQuote(inq)}>Edit</button>
-                  </>
+                    </>
                 )}
-                {inq.status !== "rejected" && inq.status !== "cancelled" && (
+                {["pending", "quoted"].includes(inq.status) && (
                   <button className="action-chip danger" type="button" onClick={() => onReject(inq)}>Reject</button>
                 )}
                 <button className="action-link" type="button" onClick={() => onSelect(inq)}>View</button>

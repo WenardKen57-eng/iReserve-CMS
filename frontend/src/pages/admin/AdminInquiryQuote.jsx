@@ -171,12 +171,12 @@ export default function AdminInquiryQuote() {
 
   const submitBooking = () => {
     if (!inquiry) return;
-    const amountValue = Number(quoteAmount || computedTotal || 0);
+    const finalAmount = Number(quoteAmount || computedTotalWithPackage || 0);
 
     AdminAPI.updateInquiry(inquiry._id, { ...buildPayload(), status: "approved" })
       .then(() =>
         AdminAPI.createBookingFromInquiry(inquiry._id, {
-          total_price: amountValue,
+          total_price: finalAmount,
           package_id: inquiry.package_id || undefined
         })
       )

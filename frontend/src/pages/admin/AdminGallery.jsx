@@ -11,14 +11,16 @@ export default function AdminGallery() {
   const [file, setFile] = useState(null);
   const { notify } = useToast();
 
-  const load = () => AdminAPI.getGallery().then((res) => setItems(Array.isArray(res.data) ? res.data : []));
+  const load = () =>
+    AdminAPI.getGallery()
+      .then((res) => setItems(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setItems([]));
   useEffect(() => { load(); }, []);
 
   const submit = async () => {
-    const rawTitle = (form.title || "").trim();
-    const safeTitle = rawTitle.split(/\s+/)[0] || "";
-    if (!safeTitle) {
-      notify("Please add a 1-word caption.", "error");
+    const titleValue = (form.title || "").trim();
+    if (!titleValue) {
+      notify("Please add a caption.", "error");
       return;
     }
     if (!form._id && !file) {
@@ -27,7 +29,7 @@ export default function AdminGallery() {
     }
 
     const data = new FormData();
-    data.append("title", safeTitle);
+    data.append("title", titleValue);
     if (file) data.append("image", file);
 
     try {
@@ -56,12 +58,36 @@ export default function AdminGallery() {
       .catch((err) => notify(err.response?.data?.message || "We could not delete the gallery item. Please try again.", "error"));
 
   const list = items;
-  const handlePick = (picked) => {
-    const selected = picked?.[0];
-    if (!selected) return;
-    setForm({ title: "" });
-    setFile(selected);
-    setShow(true);
+  const handlePick = async (picked) => {
+    const files = Array.from(picked || []);
+    if (files.length === 0) return;
+
+    if (files.length === 1) {
+      setForm({ title: "" });
+      setFile(files[0]);
+      setShow(true);
+      return;
+    }
+
+    let uploaded = 0;
+    for (const fileItem of files) {
+      const baseName = String(fileItem?.name || "").replace(/\.[^.]+$/, "").trim();
+      const caption = baseName || "Gallery";
+      const data = new FormData();
+      data.append("title", caption);
+      data.append("image", fileItem);
+      try {
+        await AdminAPI.createGallery(data);
+        uploaded += 1;
+      } catch (err) {
+        notify(err.response?.data?.message || "We could not upload some photos. Please try again.", "error");
+        break;
+      }
+    }
+    if (uploaded > 0) {
+      notify(`Uploaded ${uploaded} photo${uploaded > 1 ? "s" : ""}.`, "success");
+      load();
+    }
   };
 
   return (
@@ -75,9 +101,9 @@ export default function AdminGallery() {
 
       <label className="gallery-upload-box">
         <span className="gallery-upload-icon">↑</span>
-        <span className="gallery-upload-title">Click to upload Multiple photo for Landing Page carousel</span>
+        <span className="gallery-upload-title">Click to upload photos for Landing Page carousel</span>
         <span className="gallery-upload-hint">PNG, JPG, PDF up to 50MB</span>
-        <input type="file" onChange={(e) => handlePick(e.target.files)} />
+        <input type="file" multiple onChange={(e) => handlePick(e.target.files)} />
       </label>
 
       <h3 className="gallery-section-title">Our Gallery</h3>
@@ -115,7 +141,7 @@ export default function AdminGallery() {
         <Modal title="Gallery Item" onClose={() => setShow(false)}>
           <div className="admin-modal">
             <input
-              placeholder="Caption (1 word)"
+              placeholder="Caption"
               value={form.title || ""}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />

@@ -46,7 +46,7 @@ export default function AdminInquiries() {
   };
 
   const filtered = inquiries.filter((inq) => {
-    const text = `${inq.event_type || ""} ${inq.customer_id?.full_name || ""} ${inq.contact_first_name || ""} ${inq.contact_last_name || ""}`.toLowerCase();
+    const text = `${inq._id || ""} ${inq.event_type || ""} ${inq.customer_id?.full_name || ""} ${inq.contact_first_name || ""} ${inq.contact_last_name || ""}`.toLowerCase();
     const matchesQuery = text.includes(query.toLowerCase());
     const matchesStatus = statusFilter === "all" || inq.status === statusFilter;
     return matchesQuery && matchesStatus;
@@ -72,9 +72,8 @@ export default function AdminInquiries() {
       <div className="admin-actions" style={{ marginBottom: "12px" }}>
         <div className="admin-search">
           <span className="search-icon">🔍</span>
-          <input placeholder="Search by client name, booking ID, or event type.." value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input placeholder="Search by client name, inquiry ID, or event type..." value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
-        <button className="admin-filter">Filters</button>
         <select className="admin-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All</option>
           <option value="pending">Pending</option>
