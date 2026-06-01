@@ -1,3 +1,7 @@
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "-");
+
+const formatId = (value) => (value ? `EVT-${String(value).slice(-6).toUpperCase()}` : "-");
+
 export default function AdminBookingsHistoryTable({ bookings, onView }) {
   return (
     <table className="table">
@@ -14,10 +18,10 @@ export default function AdminBookingsHistoryTable({ bookings, onView }) {
       <tbody>
         {bookings.map((b) => (
           <tr key={b._id}>
-            <td>{b._id}</td>
+            <td>{formatId(b._id)}</td>
             <td>{b.event_type}</td>
             <td>{b.customer_id?.full_name || "Customer"}</td>
-            <td>{new Date(b.event_date).toLocaleDateString()}</td>
+            <td>{formatDate(b.event_date)}</td>
             <td>{b.status}</td>
             <td>
               <button className="btn-outline" onClick={() => onView?.(b)}>View</button>

@@ -7,9 +7,9 @@ export default function AdminBookingsCalendar() {
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
-    AdminAPI.getBookings().then((res) =>
-      setBookings(res.data.filter((booking) => booking.status === "active"))
-    );
+    AdminAPI.getBookings()
+      .then((res) => setBookings(res.data.filter((booking) => booking.status === "active")))
+      .catch(() => setBookings([]));
   }, []);
 
   const grouped = useMemo(() => {

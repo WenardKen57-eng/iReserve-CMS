@@ -12,12 +12,14 @@ export const AdminAPI = {
 
   // Bookings
   getBookings: () => api.get("/bookings"),
+  createBooking: (data) => api.post("/bookings", data),
   createBookingFromInquiry: (id, data) => api.post(`/bookings/from-inquiry/${id}`, data),
   updateBooking: (id, data) => api.put(`/bookings/${id}`, data),
   deleteBooking: (id) => api.delete(`/bookings/${id}`),
 
   // Payments
   getPayments: () => api.get("/payments"),
+  createPayment: (data) => api.post("/payments", data),
   updatePayment: (id, data) => api.put(`/payments/${id}`, data),
 
   // Packages
@@ -50,8 +52,16 @@ export const AdminAPI = {
   updateStaff: (id, data) => api.put(`/staff/${id}`, data),
   deleteStaff: (id) => api.delete(`/staff/${id}`),
 
+  // Customers
+  getCustomers: () => api.get("/users/customers"),
+  updateCustomerStatus: (id, data) => api.put(`/users/${id}/status`, data),
+
   // Ratings
   getRatings: () => api.get("/ratings"),
+
+  // Business Info
+  getBusinessInfo: () => api.get("/business-info"),
+  updateBusinessInfo: (data) => api.put("/business-info", data),
 
   // Logs
   getLogs: () => api.get("/systemlogs")

@@ -10,13 +10,15 @@ export default function AdminBookingsHistory() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    AdminAPI.getBookings().then((res) => {
-      setBookings(res.data.filter((b) => b.status !== "active"));
-    });
+    AdminAPI.getBookings()
+      .then((res) => {
+        setBookings(res.data.filter((b) => b.status !== "active"));
+      })
+      .catch(() => setBookings([]));
   }, []);
 
   const filtered = bookings.filter((booking) => {
-    const text = `${booking.event_type || ""} ${booking.customer_id?.full_name || ""}`.toLowerCase();
+    const text = `${booking._id || ""} ${booking.event_type || ""} ${booking.customer_id?.full_name || ""}`.toLowerCase();
     return text.includes(query.toLowerCase());
   });
 
@@ -25,7 +27,7 @@ export default function AdminBookingsHistory() {
       <h1>Event History</h1>
       <div className="admin-actions" style={{ marginBottom: "12px" }}>
         <div className="admin-search">
-          <input placeholder="Search by client or event" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input placeholder="Search by client name, booking ID, or event type..." value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
       </div>
       <div className="panel">

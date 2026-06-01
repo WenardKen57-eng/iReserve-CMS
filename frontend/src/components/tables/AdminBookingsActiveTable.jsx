@@ -1,3 +1,5 @@
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "-");
+
 export default function AdminBookingsActiveTable({ bookings, onMarkDone, onCancel, onView }) {
   return (
     <table className="table">
@@ -16,13 +18,13 @@ export default function AdminBookingsActiveTable({ bookings, onMarkDone, onCance
           <tr key={b._id}>
             <td>{b.event_type}</td>
             <td>{b.customer_id?.full_name || "Customer"}</td>
-            <td>{new Date(b.event_date).toLocaleDateString()}</td>
+            <td>{formatDate(b.event_date)}</td>
             <td>{b.guest_count}</td>
             <td>{b.status}</td>
             <td>
               <button className="btn-outline" onClick={() => onView?.(b)}>View</button>
-              <button className="btn" onClick={() => onMarkDone(b._id)}>Mark Done</button>
-              <button className="btn-danger" onClick={() => onCancel(b._id)}>Cancel</button>
+              <button className="btn" onClick={() => onMarkDone?.(b)}>Mark Done</button>
+              <button className="btn-danger" onClick={() => onCancel?.(b)}>Cancel</button>
             </td>
           </tr>
         ))}

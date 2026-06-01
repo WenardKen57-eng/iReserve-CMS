@@ -36,6 +36,7 @@ import AdminGallery from "../pages/admin/AdminGallery";
 import AdminBookingsActive from "../pages/admin/AdminBookingsActive";
 import AdminBookingsHistory from "../pages/admin/AdminBookingsHistory";
 import AdminBookingsCalendar from "../pages/admin/AdminBookingsCalendar";
+import AdminBookingWizard from "../pages/admin/AdminBookingWizard";
 import AdminPackages from "../pages/admin/AdminPackages";
 import AdminMenu from "../pages/admin/AdminMenu";
 import AdminInventory from "../pages/admin/AdminInventory";
@@ -120,6 +121,7 @@ export default function AppRoutes() {
         <Route path="/admin/messages/:id" element={<ProtectedRoute allowedRoles={adminOnly}><AdminMessagesChat /></ProtectedRoute>} />
         <Route path="/admin/gallery" element={<ProtectedRoute allowedRoles={adminOnly}><AdminGallery /></ProtectedRoute>} />
         <Route path="/admin/bookings/active" element={<ProtectedRoute allowedRoles={adminOnly}><AdminBookingsActive /></ProtectedRoute>} />
+        <Route path="/admin/bookings/new" element={<ProtectedRoute allowedRoles={adminOnly}><AdminBookingWizard /></ProtectedRoute>} />
         <Route path="/admin/bookings/history" element={<ProtectedRoute allowedRoles={adminOnly}><AdminBookingsHistory /></ProtectedRoute>} />
         <Route path="/admin/bookings/calendar" element={<ProtectedRoute allowedRoles={adminOnly}><AdminBookingsCalendar /></ProtectedRoute>} />
         <Route path="/admin/packages" element={<ProtectedRoute allowedRoles={adminOnly}><AdminPackages /></ProtectedRoute>} />

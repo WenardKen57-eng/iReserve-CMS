@@ -1,4 +1,10 @@
-export default function AdminPaymentApprovalsTable({ payments, onApprove, onReject }) {
+const formatAmount = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
+
+const formatId = (value) => (value ? `TXN-${String(value).slice(-6).toUpperCase()}` : "-");
+
+const statusLabel = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : "Pending");
+
+export default function AdminPaymentApprovalsTable({ payments, onApprove, onReject, onViewProof }) {
   return (
     <table className="table">
       <thead>
@@ -8,6 +14,7 @@ export default function AdminPaymentApprovalsTable({ payments, onApprove, onReje
           <th>Type</th>
           <th>Amount</th>
           <th>Payment Method</th>
+          <th>Proof</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -15,25 +22,30 @@ export default function AdminPaymentApprovalsTable({ payments, onApprove, onReje
       <tbody>
         {payments.map((p) => (
           <tr key={p._id}>
-            <td>{p.booking_id?._id || p._id}</td>
+            <td>{formatId(p._id)}</td>
             <td>{p.customer_id?.full_name || "Customer"}</td>
             <td>{p.payment_type}</td>
-            <td>₱{p.amount}</td>
-            <td>{p.method}</td>
+            <td>{formatAmount(p.amount)}</td>
+            <td>{p.method || "-"}</td>
+            <td>
+              {p.proof_url || p.checkout_url ? (
+                <button className="action-link" type="button" onClick={() => onViewProof?.(p)}>
+                  View
+                </button>
+              ) : (
+                "-"
+              )}
+            </td>
             <td>
               <span className={`badge-status ${p.status === "approved" ? "approved" : p.status === "rejected" ? "rejected" : "pending"}`}>
-                {p.status}
+                {statusLabel(p.status)}
               </span>
             </td>
             <td>
-              {p._id?.startsWith("mock-") ? null : (
+              {p.status === "pending" && (
                 <>
-                  {p.status === "pending" && (
-                    <>
-                      <button className="btn" onClick={() => onApprove(p._id)}>Approve</button>
-                      <button className="btn-danger" onClick={() => onReject(p._id)}>Reject</button>
-                    </>
-                  )}
+                  <button className="btn" onClick={() => onApprove?.(p)}>Approve</button>
+                  <button className="btn-danger" onClick={() => onReject?.(p)}>Reject</button>
                 </>
               )}
             </td>

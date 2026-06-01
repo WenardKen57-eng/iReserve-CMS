@@ -1,4 +1,11 @@
-export default function AdminManagersTable({ list, tab, onEdit, onRemove }) {
+export default function AdminManagersTable({ list, tab, onEdit, onToggleStatus, onView }) {
+  const formatId = (value, index) => {
+    const suffix = String(index + 1).padStart(3, "0");
+    if (tab === "customers") return `CUS-${suffix}`;
+    if (tab === "staff") return `STF-${suffix}`;
+    return `MGR-${suffix}`;
+  };
+
   return (
     <table className="table">
       <thead>
@@ -13,21 +20,26 @@ export default function AdminManagersTable({ list, tab, onEdit, onRemove }) {
       <tbody>
         {list.map((m, index) => (
           <tr key={m._id}>
-            <td>{tab === "managers" ? `MGR-${String(index + 1).padStart(3, "0")}` : `STF-${String(index + 1).padStart(3, "0")}`}</td>
+            <td>{formatId(m._id, index)}</td>
             <td>{m.full_name}</td>
-            <td>{m.role}</td>
+            <td>{tab === "customers" ? "customer" : m.role}</td>
             <td>
               <span className={`badge-status ${m.is_active ? "active" : "inactive"}`}>
                 {m.is_active ? "Active" : "Inactive"}
               </span>
             </td>
             <td>
-              {m._id?.startsWith("mock-") ? null : (
-                <>
-                  <button className="btn-outline" onClick={() => onEdit(m)}>Edit</button>
-                  <button className="btn-danger" onClick={() => onRemove(m._id)}>Disable</button>
-                </>
+              {tab !== "customers" && (
+                <button className="btn-outline" onClick={() => onEdit(m)}>Edit</button>
               )}
+              {tab !== "customers" && (
+                <button className="btn-outline" onClick={() => onView?.(m)}>View</button>
+              )}
+              <button className={m.is_active ? "btn-danger" : "btn"} onClick={() => onToggleStatus(m)}>
+                {tab === "customers"
+                  ? (m.is_active ? "Block" : "Unblock")
+                  : (m.is_active ? "Disable" : "Enable")}
+              </button>
             </td>
           </tr>
         ))}
