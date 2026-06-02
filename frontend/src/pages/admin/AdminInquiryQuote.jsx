@@ -41,30 +41,35 @@ export default function AdminInquiryQuote() {
   const [packages, setPackages] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [menuPricing, setMenuPricing] = useState([]);
   const [servicePricing, setServicePricing] = useState([]);
   const [quoteNotes, setQuoteNotes] = useState("");
   const [quoteAmount, setQuoteAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("gcash");
   const [packageAmount, setPackageAmount] = useState("");
+  const [managerId, setManagerId] = useState("");
 
   useEffect(() => {
     Promise.all([
       AdminAPI.getInquiry(id),
       AdminAPI.getPackages(),
       AdminAPI.getMenu(),
-      AdminAPI.getInventory()
+      AdminAPI.getInventory(),
+      AdminAPI.getStaff()
     ])
-      .then(([inquiryRes, packageRes, menuRes, inventoryRes]) => {
+      .then(([inquiryRes, packageRes, menuRes, inventoryRes, staffRes]) => {
         const inquiryData = inquiryRes.data;
         setInquiry(inquiryData);
         setPackages(Array.isArray(packageRes.data) ? packageRes.data : []);
         setMenuItems(Array.isArray(menuRes.data) ? menuRes.data : []);
         setInventoryItems(Array.isArray(inventoryRes.data) ? inventoryRes.data : []);
+        setStaff(Array.isArray(staffRes.data) ? staffRes.data : []);
         setQuoteNotes(inquiryData.quote_notes || "");
         setQuoteAmount(inquiryData.quote_amount || "");
         setPaymentMethod(inquiryData.payment_method || "gcash");
         setPackageAmount(inquiryData.package_amount ?? "");
+        setManagerId(inquiryData.manager_id?._id || inquiryData.manager_id || "");
       })
       .catch((err) => {
         notify(err.response?.data?.message || "We could not load the inquiry. Please refresh and try again.", "error");
@@ -137,6 +142,8 @@ export default function AdminInquiryQuote() {
       });
   }, [servicePricing]);
 
+  const managers = useMemo(() => staff.filter((person) => person.role === "manager"), [staff]);
+
   const handleQuantityChange = (index, delta) => {
     const next = [...servicePricing];
     const current = Number(next[index].quantity) || 0;
@@ -171,13 +178,18 @@ export default function AdminInquiryQuote() {
 
   const submitBooking = () => {
     if (!inquiry) return;
+    if (!managerId) {
+      notify("Please assign a manager before submitting.", "error");
+      return;
+    }
     const finalAmount = Number(quoteAmount || computedTotalWithPackage || 0);
 
     AdminAPI.updateInquiry(inquiry._id, { ...buildPayload(), status: "approved" })
       .then(() =>
         AdminAPI.createBookingFromInquiry(inquiry._id, {
           total_price: finalAmount,
-          package_id: inquiry.package_id || undefined
+          package_id: inquiry.package_id || undefined,
+          manager_id: managerId
         })
       )
       .then(() => {
@@ -491,6 +503,16 @@ export default function AdminInquiryQuote() {
             <div className="quote-input-row">
               <label>Quote Notes</label>
               <textarea value={quoteNotes} onChange={(e) => setQuoteNotes(e.target.value)} />
+            </div>
+            <div className="quote-input-row">
+              <label>Assign Manager</label>
+              <select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+                <option value="">Select Manager</option>
+                {managers.map((manager) => (
+                  <option key={manager._id} value={manager._id}>{manager.full_name}</option>
+                ))}
+              </select>
+              {managers.length === 0 && <small>No manager accounts available.</small>}
             </div>
           </div>
 
