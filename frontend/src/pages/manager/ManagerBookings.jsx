@@ -21,6 +21,21 @@ const buildEquipmentList = (booking) => {
   return Array.from(new Set(items.filter(Boolean)));
 };
 
+const getServiceTypeLabel = (booking) => {
+  if (!booking) return "Event";
+  const inquiryService = booking.inquiry_id?.service_type;
+  if (inquiryService === "food_only") return "Food Only";
+  if (inquiryService === "event_only") return "Event Setup Only";
+  if (inquiryService === "food_event") return "Food & Event Setup";
+
+  const hasServices =
+    (Array.isArray(booking.additional_services) && booking.additional_services.length > 0) ||
+    (Array.isArray(booking.service_items) && booking.service_items.length > 0);
+  if (booking.include_food && hasServices) return "Food & Event Setup";
+  if (booking.include_food) return "Food Only";
+  return "Event Setup Only";
+};
+
 export default function ManagerBookings() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("pending");
@@ -159,6 +174,11 @@ export default function ManagerBookings() {
         });
       });
 
+    if (staffAssignments.length === 0) {
+      notify("Please assign at least one staff member.", "error");
+      return;
+    }
+
     ManagerAPI.assignStaff(assignTarget._id, { staff_assignments: staffAssignments })
       .then(() => {
         notify("Staff assignment saved.", "success");
@@ -292,7 +312,7 @@ export default function ManagerBookings() {
                 </div>
                 <div>
                   <div className="font-semibold text-ink-900">Service Type</div>
-                  <span className="chip">{assignTarget.event_type || "Event"}</span>
+                  <span className="chip">{getServiceTypeLabel(assignTarget)}</span>
                 </div>
               </div>
             </div>

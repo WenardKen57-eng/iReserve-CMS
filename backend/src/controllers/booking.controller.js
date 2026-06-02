@@ -197,6 +197,16 @@ exports.createFromInquiry = asyncHandler(async (req, res) => {
 		link: "/customer/bookings",
 		meta: { booking_id: booking._id }
 	}, io);
+	if (booking.manager_id) {
+		await createNotification({
+			userId: booking.manager_id,
+			title: "New event assigned",
+			body: "A new event is ready for staffing and scheduling.",
+			type: "info",
+			link: "/manager/bookings",
+			meta: { booking_id: booking._id }
+		}, io);
+	}
 	res.status(201).json(booking);
 });
 
