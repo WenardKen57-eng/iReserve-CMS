@@ -2,20 +2,36 @@ import { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/admin";
 import useToast from "../../hooks/useToast";
 
+const DEFAULT_INFO = {
+  business_name: "",
+  contact_number: "",
+  email: "",
+  address: "",
+  hours: "",
+  facebook: "",
+  instagram: "",
+  terms_url: "",
+  privacy_url: ""
+};
+
+const footerItems = [
+  { label: "Brand name", key: "business_name" },
+  { label: "Phone", key: "contact_number" },
+  { label: "Email", key: "email" },
+  { label: "Address", key: "address" },
+  { label: "Hours", key: "hours" },
+  { label: "Facebook", key: "facebook" },
+  { label: "Instagram", key: "instagram" },
+  { label: "Terms", key: "terms_url" },
+  { label: "Privacy", key: "privacy_url" }
+];
+
 export default function BusinessInfoPanel() {
-  const [form, setForm] = useState({
-    business_name: "",
-    contact_number: "",
-    email: "",
-    address: "",
-    hours: "",
-    facebook: "",
-    instagram: "",
-    terms_url: "",
-    privacy_url: ""
-  });
+  const [form, setForm] = useState(DEFAULT_INFO);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const { notify } = useToast();
+  const previewInfo = { ...DEFAULT_INFO, ...form };
 
   useEffect(() => {
     AdminAPI.getBusinessInfo()
@@ -30,49 +46,145 @@ export default function BusinessInfoPanel() {
     setForm((prev) => ({ ...prev, [key]: event.target.value }));
   };
 
-  const save = async () => {
+  const save = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+
     try {
       await AdminAPI.updateBusinessInfo(form);
       notify("Business info updated.", "success");
     } catch (err) {
       notify(err.response?.data?.message || "We could not save the business info. Please try again.", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p>Loading business info...</p>;
+  if (loading) return <div className="business-info-loading panel">Loading business info...</div>;
 
   return (
-    <div className="panel">
-      <div className="form-section">
-        <h4>Edit Business Information</h4>
-        <div className="form-grid-2">
-          <input placeholder="Business name" value={form.business_name} onChange={updateField("business_name")} />
-          <input placeholder="Contact number" value={form.contact_number} onChange={updateField("contact_number")} />
+    <div className="business-info-shell">
+      <div className="business-info-hero panel">
+        <div>
+          <p className="business-info-kicker">Footer content editor</p>
+          <h2>Business Information</h2>
+          <p className="business-info-intro">
+            Update the contact details, policies, and social links that appear in the public landing page footer.
+          </p>
         </div>
-        <div className="form-grid-2">
-          <input placeholder="Email address" value={form.email} onChange={updateField("email")} />
-          <input placeholder="Business hours" value={form.hours} onChange={updateField("hours")} />
-        </div>
-        <input placeholder="Business address" value={form.address} onChange={updateField("address")} />
-      </div>
-
-      <div className="form-section">
-        <h4>Social Links</h4>
-        <div className="form-grid-2">
-          <input placeholder="Facebook link" value={form.facebook} onChange={updateField("facebook")} />
-          <input placeholder="Instagram link" value={form.instagram} onChange={updateField("instagram")} />
+        <div className="business-info-chip-row">
+          {footerItems.map((item) => (
+            <span key={item.key} className="business-info-chip">{item.label}</span>
+          ))}
         </div>
       </div>
 
-      <div className="form-section">
-        <h4>Policies</h4>
-        <div className="form-grid-2">
-          <input placeholder="Terms and Conditions URL" value={form.terms_url} onChange={updateField("terms_url")} />
-          <input placeholder="Privacy Policy URL" value={form.privacy_url} onChange={updateField("privacy_url")} />
-        </div>
-      </div>
+      <div className="business-info-grid">
+        <form className="business-info-form panel" onSubmit={save}>
+          <div className="form-section">
+            <h4>Core details</h4>
+            <div className="form-grid-2">
+              <label className="business-info-field">
+                <span>Business name</span>
+                <input className="business-info-input" value={form.business_name} onChange={updateField("business_name")} placeholder="Business name" />
+              </label>
+              <label className="business-info-field">
+                <span>Contact number</span>
+                <input className="business-info-input" type="tel" value={form.contact_number} onChange={updateField("contact_number")} placeholder="Contact number" />
+              </label>
+            </div>
+            <div className="form-grid-2">
+              <label className="business-info-field">
+                <span>Email address</span>
+                <input className="business-info-input" type="email" value={form.email} onChange={updateField("email")} placeholder="Email address" />
+              </label>
+              <label className="business-info-field">
+                <span>Business hours</span>
+                <input className="business-info-input" value={form.hours} onChange={updateField("hours")} placeholder="Business hours" />
+              </label>
+            </div>
+            <label className="business-info-field">
+              <span>Business address</span>
+              <textarea className="business-info-input business-info-textarea" rows="4" value={form.address} onChange={updateField("address")} placeholder="Business address" />
+            </label>
+          </div>
 
-      <button className="btn" type="button" onClick={save}>Save Changes</button>
+          <div className="form-section">
+            <h4>Social links</h4>
+            <div className="form-grid-2">
+              <label className="business-info-field">
+                <span>Facebook link</span>
+                <input className="business-info-input" value={form.facebook} onChange={updateField("facebook")} placeholder="https://facebook.com/..." />
+              </label>
+              <label className="business-info-field">
+                <span>Instagram link</span>
+                <input className="business-info-input" value={form.instagram} onChange={updateField("instagram")} placeholder="https://instagram.com/..." />
+              </label>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4>Policies</h4>
+            <div className="form-grid-2">
+              <label className="business-info-field">
+                <span>Terms and Conditions URL</span>
+                <input className="business-info-input" value={form.terms_url} onChange={updateField("terms_url")} placeholder="https://..." />
+              </label>
+              <label className="business-info-field">
+                <span>Privacy Policy URL</span>
+                <input className="business-info-input" value={form.privacy_url} onChange={updateField("privacy_url")} placeholder="https://..." />
+              </label>
+            </div>
+          </div>
+
+          <div className="business-info-actions">
+            <p className="business-info-note">These values are shown on the public landing page footer after you save them.</p>
+            <button className="btn" type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
+          </div>
+        </form>
+
+        <aside className="business-info-preview panel">
+          <div className="business-info-preview-header">
+            <p className="business-info-kicker">Footer preview</p>
+            <h3>{previewInfo.business_name || "Business name preview"}</h3>
+            <p>What visitors will see in the landing page footer.</p>
+          </div>
+
+          <div className="business-info-preview-card">
+            <div>
+              <span className="business-info-preview-label">Contact</span>
+              <strong>{previewInfo.contact_number || "Add a contact number"}</strong>
+            </div>
+            <div>
+              <span className="business-info-preview-label">Email</span>
+              <strong>{previewInfo.email || "Add an email address"}</strong>
+            </div>
+            <div>
+              <span className="business-info-preview-label">Address</span>
+              <strong>{previewInfo.address || "Add a business address"}</strong>
+            </div>
+            <div>
+              <span className="business-info-preview-label">Hours</span>
+              <strong>{previewInfo.hours || "Add business hours"}</strong>
+            </div>
+          </div>
+
+          <div className="business-info-preview-links">
+            <div>
+              <span>Facebook</span>
+              <strong>{previewInfo.facebook || "Not set"}</strong>
+            </div>
+            <div>
+              <span>Instagram</span>
+              <strong>{previewInfo.instagram || "Not set"}</strong>
+            </div>
+            <div>
+              <span>Policies</span>
+              <strong>{previewInfo.terms_url || previewInfo.privacy_url ? "Configured" : "Not set"}</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

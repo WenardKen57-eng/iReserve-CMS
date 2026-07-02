@@ -751,11 +751,28 @@
   }
 
   .landing-footer {
-    @apply p-10 mt-0 text-white rounded-3xl rounded-t-none bg-ink-900;
+    @apply relative overflow-hidden p-10 mt-0 text-white rounded-3xl rounded-t-none bg-ink-900;
+    background:
+      radial-gradient(900px 500px at 0% 0%, rgba(176, 140, 77, 0.24), transparent 55%),
+      radial-gradient(700px 400px at 100% 10%, rgba(30, 58, 138, 0.22), transparent 50%),
+      linear-gradient(135deg, #09111f 0%, #0f1b33 55%, #132241 100%);
+  }
+
+  .landing-footer::before {
+    content: "";
+    @apply absolute inset-x-10 top-0 h-px bg-white/10;
   }
 
   .footer-brand {
     @apply flex items-start gap-3;
+  }
+
+  .footer-brand-panel {
+    @apply rounded-2xl border border-white/10 bg-white/5 p-5;
+  }
+
+  .footer-brand-summary {
+    @apply mt-4 max-w-sm text-sm leading-6 text-white/70;
   }
 
   .footer-logo {
@@ -774,6 +791,10 @@
     @apply flex items-start gap-2 text-xs text-white/70;
   }
 
+  .footer-contact-item a {
+    @apply text-inherit;
+  }
+
   .footer-contact-icon {
     @apply mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/10 text-white/80;
     flex: 0 0 auto;
@@ -785,6 +806,15 @@
 
   .footer-social {
     @apply mt-4 flex items-center gap-3;
+  }
+
+  .footer-policy-links {
+    @apply mt-4 flex flex-col gap-2;
+  }
+
+  .footer-policy-links a,
+  .footer-empty-state {
+    @apply text-xs text-white/70;
   }
 
   .footer-social a {
