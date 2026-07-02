@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import CustomerDashboardLayout from "../../components/layout/CustomerDashboardLayout";
 import { CustomerAPI } from "../../api/customer";
 import DashboardStatCard from "../../components/dashboard/DashboardStatCard";
+import useToast from "../../hooks/useToast";
 
 const formatCurrency = (value) => {
   if (value === undefined || value === null || value === "") return "-";
@@ -10,6 +11,8 @@ const formatCurrency = (value) => {
 
 export default function CustomerBookings() {
   const [bookings, setBookings] = useState([]);
+  const [payingBookingId, setPayingBookingId] = useState(null);
+  const { notify } = useToast();
 
   useEffect(() => {
     CustomerAPI.getBookings().then((res) => setBookings(res.data)).catch(() => setBookings([]));
@@ -29,6 +32,33 @@ export default function CustomerBookings() {
   );
 
   const nextEvent = upcoming[0];
+
+  const startPayment = async (booking) => {
+    if (!booking?._id) return;
+
+    const amount = Number(booking.total_price || 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      notify("This booking does not have a valid payable amount yet.", "error");
+      return;
+    }
+
+    try {
+      setPayingBookingId(booking._id);
+      const response = await CustomerAPI.createPaymentCheckout({
+        booking_id: booking._id,
+        amount,
+        payment_type: "deposit"
+      });
+      const checkoutUrl = response.data?.checkout_url;
+      if (!checkoutUrl) {
+        throw new Error("PayMongo checkout link was not returned.");
+      }
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      notify(error.response?.data?.message || error.message || "We could not start PayMongo checkout. Please try again.", "error");
+      setPayingBookingId(null);
+    }
+  };
 
   return (
     <CustomerDashboardLayout
@@ -92,7 +122,14 @@ export default function CustomerBookings() {
           </div>
           <div className="actions">
             <button className="btn" type="button">Message Caterer</button>
-            <button className="btn-outline" type="button">Pay Balance</button>
+            <button
+              className="btn-outline"
+              type="button"
+              onClick={() => startPayment(nextEvent)}
+              disabled={payingBookingId === nextEvent._id}
+            >
+              {payingBookingId === nextEvent._id ? "Opening PayMongo..." : "Pay Balance"}
+            </button>
           </div>
         </div>
       )}
