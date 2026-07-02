@@ -4,6 +4,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { CustomerAPI } from "../../api/customer";
 import logo from "../../assets/images/logo.jpg";
 
+const DEFAULT_BUSINESS_INFO = {
+  business_name: "Caezelle's Catering",
+  contact_number: "09123456789",
+  email: "info@caezelle.com",
+  address: "123 Culinary Street Food City",
+  hours: "Mon-Fri: 7:30 AM - 7:00 PM",
+  facebook: "https://facebook.com",
+  instagram: "https://instagram.com",
+  terms_url: "",
+  privacy_url: ""
+};
+
 const HERO_MESSAGES = [
   {
     title: "Delicious Catering for your Special Events",
@@ -58,6 +70,7 @@ export default function Landing() {
   const [galleryItems, setGalleryItems] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [businessInfo, setBusinessInfo] = useState(DEFAULT_BUSINESS_INFO);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -72,11 +85,12 @@ export default function Landing() {
 
     const loadPublicContent = async () => {
       try {
-        const [packagesResult, galleryResult, menuResult, ratingsResult] = await Promise.allSettled([
+        const [packagesResult, galleryResult, menuResult, ratingsResult, businessResult] = await Promise.allSettled([
           CustomerAPI.getPackages(),
           CustomerAPI.getGallery(),
           CustomerAPI.getMenu(),
-          CustomerAPI.getRatings()
+          CustomerAPI.getRatings(),
+          CustomerAPI.getBusinessInfo()
         ]);
 
         if (!isMounted) return;
@@ -90,12 +104,17 @@ export default function Landing() {
         setGalleryItems(toArray(galleryResult));
         setMenuItems(toArray(menuResult));
         setReviews(toArray(ratingsResult));
+
+        if (businessResult?.status === "fulfilled") {
+          setBusinessInfo((prev) => ({ ...prev, ...(businessResult.value?.data || {}) }));
+        }
       } catch {
         if (!isMounted) return;
         setPackages([]);
         setGalleryItems([]);
         setMenuItems([]);
         setReviews([]);
+        setBusinessInfo(DEFAULT_BUSINESS_INFO);
       }
     };
 
@@ -180,6 +199,22 @@ export default function Landing() {
     { label: "Baby Shower", icon: "🍼" },
     { label: "Graduation", icon: "🎓" }
   ];
+
+  const footerBusinessName = businessInfo.business_name || DEFAULT_BUSINESS_INFO.business_name;
+  const footerContactNumber = businessInfo.contact_number || DEFAULT_BUSINESS_INFO.contact_number;
+  const footerEmail = businessInfo.email || DEFAULT_BUSINESS_INFO.email;
+  const footerAddress = businessInfo.address || DEFAULT_BUSINESS_INFO.address;
+  const footerHours = businessInfo.hours || DEFAULT_BUSINESS_INFO.hours;
+
+  const footerLinks = [
+    { label: "Terms & Conditions", href: businessInfo.terms_url },
+    { label: "Privacy Policy", href: businessInfo.privacy_url }
+  ].filter((link) => link.href);
+
+  const socialLinks = [
+    { label: "Facebook", href: businessInfo.facebook || DEFAULT_BUSINESS_INFO.facebook, icon: "facebook" },
+    { label: "Instagram", href: businessInfo.instagram || DEFAULT_BUSINESS_INFO.instagram, icon: "instagram" }
+  ].filter((link) => Boolean(link.href));
 
   return (
     <CustomerLayout>
@@ -417,13 +452,16 @@ export default function Landing() {
 
       <footer id="contact" className="landing-footer">
         <div className="footer-grid">
-          <div>
+          <div className="footer-brand-panel">
             <div className="footer-brand">
               <img className="footer-logo" src={logo} alt="Caezelle Catering Services" />
               <div className="footer-brand-text">
-                <div className="footer-brand-title">Caezelle Catering Services</div>
+                <div className="footer-brand-title">{footerBusinessName}</div>
                 <p>Creating unforgettable culinary experiences since 2010.</p>
               </div>
+            </div>
+            <div className="footer-brand-summary">
+              Professional catering, memorable presentation, and attentive service for every celebration.
             </div>
           </div>
           <div>
@@ -474,7 +512,7 @@ export default function Landing() {
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.3 1.7.54 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.06a2 2 0 0 1 2.11-.45c.8.24 1.64.42 2.5.54A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </span>
-                <span>09123456789</span>
+                <a href={`tel:${footerContactNumber.replace(/\s+/g, "")}`}>{footerContactNumber}</a>
               </div>
               <div className="footer-contact-item">
                 <span className="footer-contact-icon" aria-hidden="true">
@@ -483,7 +521,7 @@ export default function Landing() {
                     <path d="m4 7 8 6 8-6" />
                   </svg>
                 </span>
-                <span>info@caezelle.com</span>
+                <a href={`mailto:${footerEmail}`}>{footerEmail}</a>
               </div>
               <div className="footer-contact-item">
                 <span className="footer-contact-icon" aria-hidden="true">
@@ -492,36 +530,38 @@ export default function Landing() {
                     <path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
                   </svg>
                 </span>
-                <span>123 Culinary Street Food City</span>
+                <span>{footerAddress}</span>
               </div>
             </div>
           </div>
           <div>
             <h4>Business Hours</h4>
-            <p>Mon-Fri: 7:30 AM - 7:00 PM</p>
-            <p>Sat: 10:00 AM - 4:00 PM</p>
-            <p>Sun: Closed</p>
+            <p>{footerHours}</p>
+
+            <div className="footer-policy-links">
+              {footerLinks.length > 0 ? footerLinks.map((link) => (
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+              )) : <span className="footer-empty-state">Policies will appear here once configured.</span>}
+            </div>
 
             <div className="footer-social" aria-label="Social links">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M22 12a10 10 0 1 0-11.6 9.9v-7h-2.3V12h2.3V9.8c0-2.3 1.4-3.6 3.5-3.6 1 0 2 .2 2 .2v2.2h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12Z" />
-                </svg>
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 4.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5ZM17.7 6.3a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z" />
-                </svg>
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M22 5.8c-.7.3-1.4.5-2.1.6.8-.5 1.3-1.2 1.6-2.1-.7.4-1.5.8-2.3.9a3.6 3.6 0 0 0-6.2 3.3A10.2 10.2 0 0 1 3.1 4.6a3.6 3.6 0 0 0 1.1 4.8c-.6 0-1.1-.2-1.6-.4v.1a3.6 3.6 0 0 0 2.9 3.5c-.3.1-.6.1-1 .1-.2 0-.5 0-.7-.1a3.6 3.6 0 0 0 3.3 2.5A7.2 7.2 0 0 1 2 17.5a10.2 10.2 0 0 0 5.6 1.6c6.7 0 10.4-5.6 10.4-10.4v-.5c.7-.5 1.3-1.1 2-1.9Z" />
-                </svg>
-              </a>
+              {socialLinks.map((link) => (
+                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={link.label}>
+                  {link.icon === "facebook" ? (
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M22 12a10 10 0 1 0-11.6 9.9v-7h-2.3V12h2.3V9.8c0-2.3 1.4-3.6 3.5-3.6 1 0 2 .2 2 .2v2.2h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12Z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 4.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5ZM17.7 6.3a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z" />
+                    </svg>
+                  )}
+                </a>
+              ))}
             </div>
           </div>
         </div>
-        <div className="footer-bottom">© 2026 Caezelle's Catering. All rights reserved.</div>
+        <div className="footer-bottom">© 2026 {footerBusinessName}. All rights reserved.</div>
       </footer>
     </CustomerLayout>
   );

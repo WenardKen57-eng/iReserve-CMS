@@ -1,9 +1,19 @@
 const BusinessInfo = require("../models/BusinessInfo");
 const asyncHandler = require("../utils/asyncHandler");
 
-exports.get = asyncHandler(async (req, res) => {
+const readBusinessInfo = async () => {
   const info = await BusinessInfo.findOne();
-  res.json(info || {});
+  return info || {};
+};
+
+exports.getPublic = asyncHandler(async (req, res) => {
+  const info = await readBusinessInfo();
+  res.json(info);
+});
+
+exports.get = asyncHandler(async (req, res) => {
+  const info = await readBusinessInfo();
+  res.json(info);
 });
 
 exports.update = asyncHandler(async (req, res) => {
