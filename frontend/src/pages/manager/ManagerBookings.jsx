@@ -219,7 +219,7 @@ export default function ManagerBookings() {
   };
 
   const renderBookingCard = (booking) => (
-    <div key={booking._id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+    <div key={booking._id} className="p-6 bg-white border rounded-3xl border-slate-200 shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-ink-900">{booking.customer_id?.full_name || "Customer"}</h3>
@@ -227,7 +227,7 @@ export default function ManagerBookings() {
         </div>
         <span className="chip">{booking.event_type || "Event"}</span>
       </div>
-      <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+      <div className="grid gap-2 mt-4 text-sm text-slate-600 sm:grid-cols-2">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Event</div>
           <div className="font-medium text-ink-900">{booking.event_type || "Event"}</div>
@@ -237,7 +237,7 @@ export default function ManagerBookings() {
           <div className="font-medium text-ink-900">{formatDate(booking.event_date)}</div>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 mt-4">
         {tab === "pending" && (
           <button className="btn" type="button" onClick={() => openAssign(booking)}>Assign Staff Now</button>
         )}
@@ -257,12 +257,12 @@ export default function ManagerBookings() {
 
   return (
     <ManagerLayout>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold">My Assigned Events</h1>
           <p className="mt-2 text-sm text-slate-500">View all events assigned to you</p>
         </div>
-        <button className="btn gap-2 uppercase" type="button" onClick={() => navigate("/manager/dashboard")}>
+        <button className="gap-2 uppercase btn" type="button" onClick={() => navigate("/manager/dashboard")}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <path d="M8 2v4" />
@@ -273,7 +273,7 @@ export default function ManagerBookings() {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 rounded-full bg-white p-2 shadow-soft">
+      <div className="flex flex-wrap gap-2 p-2 bg-white rounded-full shadow-soft">
         {TAB_OPTIONS.map((option) => (
           <button
             key={option}
@@ -288,7 +288,7 @@ export default function ManagerBookings() {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6">
+      <div className="grid gap-6 mt-6">
         {bookings.length === 0 && (
           <div className="panel">
             <p className="text-sm text-slate-500">No {tab} events yet.</p>
@@ -300,7 +300,7 @@ export default function ManagerBookings() {
       {assignTarget && (
         <Modal title="Staff Assignment" onClose={() => setAssignTarget(null)}>
           <div className="space-y-6 text-sm">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="p-4 border rounded-2xl border-slate-200 bg-slate-50">
               <div className="flex flex-wrap justify-between gap-4 text-xs text-slate-600">
                 <div>
                   <div className="font-semibold text-ink-900">Customer</div>
@@ -319,7 +319,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kitchen Staff</div>
-              <div className="mt-2 rounded-2xl border border-slate-200 p-3">
+              <div className="p-3 mt-2 border rounded-2xl border-slate-200">
                 <label className="text-xs font-semibold text-slate-500">Assign Head Cook</label>
                 <select
                   className="mt-2"
@@ -336,7 +336,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Servers</div>
-              <div className="mt-2 space-y-2 rounded-2xl border border-slate-200 p-3">
+              <div className="p-3 mt-2 space-y-2 border rounded-2xl border-slate-200">
                 {assignment.servers.map((value, index) => (
                   <select
                     key={`server-${index}`}
@@ -355,7 +355,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Setup Crew</div>
-              <div className="mt-2 space-y-2 rounded-2xl border border-slate-200 p-3">
+              <div className="p-3 mt-2 space-y-2 border rounded-2xl border-slate-200">
                 {assignment.setupCrew.map((value, index) => (
                   <select
                     key={`setup-${index}`}
@@ -374,7 +374,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Assistants</div>
-              <div className="mt-2 space-y-2 rounded-2xl border border-slate-200 p-3">
+              <div className="p-3 mt-2 space-y-2 border rounded-2xl border-slate-200">
                 {assignment.assistants.map((value, index) => (
                   <select
                     key={`assistant-${index}`}
@@ -393,7 +393,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Extra Assistants</div>
-              <div className="mt-2 space-y-2 rounded-2xl border border-slate-200 p-3">
+              <div className="p-3 mt-2 space-y-2 border rounded-2xl border-slate-200">
                 {assignment.extraAssistants.map((item, index) => (
                   <div key={`extra-${index}`} className="grid gap-2 sm:grid-cols-2">
                     <input
@@ -425,7 +425,7 @@ export default function ManagerBookings() {
           <div className="space-y-6 text-sm">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Contact Information</div>
-              <div className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="grid gap-3 mt-2 text-sm sm:grid-cols-2">
                 <div>
                   <div className="text-xs text-slate-500">Name</div>
                   <div className="font-medium">{detail.contact_first_name} {detail.contact_last_name}</div>
@@ -447,7 +447,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Event Details</div>
-              <div className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="grid gap-3 mt-2 text-sm sm:grid-cols-2">
                 <div>
                   <div className="text-xs text-slate-500">Event Type</div>
                   <div className="font-medium">{detail.event_type || "-"}</div>
@@ -469,7 +469,7 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Venue Information</div>
-              <div className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="grid gap-3 mt-2 text-sm sm:grid-cols-2">
                 <div>
                   <div className="text-xs text-slate-500">Venue Type</div>
                   <div className="font-medium">{detail.venue_type || "-"}</div>
@@ -493,7 +493,7 @@ export default function ManagerBookings() {
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Menu Options</div>
               <div className="mt-2 space-y-2">
                 {(detail.menu_items || []).map((item, index) => (
-                  <div key={`${item.name}-${index}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3">
+                  <div key={`${item.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-2xl border-slate-200">
                     <div>
                       <div className="font-medium">{item.name}</div>
                       <div className="text-xs text-slate-500">Notes: {item.note || "-"}</div>
@@ -508,7 +508,7 @@ export default function ManagerBookings() {
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Additional Services</div>
               <div className="mt-2 space-y-2">
                 {(detail.service_items || []).map((item, index) => (
-                  <div key={`${item.name}-${index}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3">
+                  <div key={`${item.name}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-2xl border-slate-200">
                     <div>
                       <div className="font-medium">{item.name}</div>
                       <div className="text-xs text-slate-500">Quantity: {item.quantity || 0}</div>
@@ -521,20 +521,20 @@ export default function ManagerBookings() {
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Payment Information</div>
-              <div className="mt-2 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="p-4 mt-2 bg-white border rounded-2xl border-slate-200">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-500">Selected Package</span>
                   <span className="font-medium">{detail.package_id?.name || "-"}</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="text-slate-500">Total Amount</span>
                   <span className="font-semibold text-ink-900">{formatMoney(detail.total_price)}</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="text-slate-500">Payment Method</span>
                   <span className="font-medium">{detail.payment_method || "-"}</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="text-slate-500">Payment Status</span>
                   <span className="chip">{detail.payment_status || "pending"}</span>
                 </div>
@@ -548,7 +548,7 @@ export default function ManagerBookings() {
                   <p className="text-xs text-slate-500">No staff assigned yet.</p>
                 )}
                 {(detail.staff_assignments || []).map((assignment, index) => (
-                  <div key={`${assignment.role}-${index}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3">
+                  <div key={`${assignment.role}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-2xl border-slate-200">
                     <div>
                       <div className="font-medium">{assignment.name || assignment.user_id?.full_name || "Staff"}</div>
                       <div className="text-xs text-slate-500">{assignment.role}</div>
@@ -562,7 +562,7 @@ export default function ManagerBookings() {
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Event Notes &amp; Incident Reports</div>
               <div className="mt-2 space-y-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="p-3 bg-white border rounded-2xl border-slate-200">
                   <textarea
                     rows={3}
                     placeholder="Add a note..."
@@ -574,7 +574,7 @@ export default function ManagerBookings() {
                   </div>
                 </div>
                 {(detail.manager_notes || []).map((entry, index) => (
-                  <div key={`note-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div key={`note-${index}`} className="p-3 border rounded-2xl border-slate-200 bg-slate-50">
                     <div className="text-xs text-slate-500">{new Date(entry.created_at).toLocaleString()}</div>
                     <div className="mt-1 text-sm text-ink-900">{entry.note}</div>
                   </div>
