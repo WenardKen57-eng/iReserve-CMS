@@ -17,7 +17,7 @@ pids/
 
 # Environment files
 .env
-.env.*
+
 
 # Build outputs
 /dist/
