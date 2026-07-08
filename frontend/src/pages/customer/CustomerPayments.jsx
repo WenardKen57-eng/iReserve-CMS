@@ -3,15 +3,54 @@ import CustomerDashboardLayout from "../../components/layout/CustomerDashboardLa
 import { CustomerAPI } from "../../api/customer";
 import DashboardStatCard from "../../components/dashboard/DashboardStatCard";
 import CustomerPaymentsTable from "../../components/tables/CustomerPaymentsTable";
+import useToast from "../../hooks/useToast";
+import { useSearchParams } from "react-router-dom";
 
 const formatCurrency = (value) => `PHP ${Number(value || 0).toLocaleString()}`;
 
 export default function CustomerPayments() {
   const [payments, setPayments] = useState([]);
+  const [payingPaymentId, setPayingPaymentId] = useState(null);
+  const [searchParams] = useSearchParams();
+  const { notify } = useToast();
 
   useEffect(() => {
     CustomerAPI.getPayments().then((res) => setPayments(res.data)).catch(() => setPayments([]));
   }, []);
+
+  const paymentStatus = searchParams.get("status");
+  const paymentNotice = paymentStatus === "success"
+    ? { type: "success", text: "PayMongo payment completed. Your transaction will update shortly." }
+    : paymentStatus === "cancelled"
+      ? { type: "warning", text: "PayMongo checkout was cancelled." }
+      : null;
+
+  const startPayment = async (payment) => {
+    if (!payment?._id || !payment.booking_id?._id) return;
+
+    const amount = Number(payment.amount || 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      notify("This payment does not have a valid amount.", "error");
+      return;
+    }
+
+    try {
+      setPayingPaymentId(payment._id);
+      const response = await CustomerAPI.createPaymentCheckout({
+        booking_id: payment.booking_id._id,
+        amount,
+        payment_type: payment.payment_type || "deposit"
+      });
+      const checkoutUrl = response.data?.checkout_url;
+      if (!checkoutUrl) {
+        throw new Error("PayMongo checkout link was not returned.");
+      }
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      notify(error.response?.data?.message || error.message || "We could not start PayMongo checkout. Please try again.", "error");
+      setPayingPaymentId(null);
+    }
+  };
 
   const totalPaid = useMemo(
     () => payments.reduce((sum, item) => sum + (item.amount || 0), 0),
@@ -27,6 +66,12 @@ export default function CustomerPayments() {
       title="Payment History"
       subtitle="Track your payments and transactions"
     >
+      {paymentNotice && (
+        <div className={`booking-alert ${paymentNotice.type}`} style={{ marginBottom: "16px" }}>
+          {paymentNotice.text}
+        </div>
+      )}
+
       <div className="dashboard-cards">
         <DashboardStatCard
           label="Total Spent"
@@ -57,7 +102,15 @@ export default function CustomerPayments() {
             </div>
             <div>
               <strong>{formatCurrency(p.amount)}</strong>
-              <div className="action-link">Pay Now →</div>
+              <button
+                className="action-link"
+                type="button"
+                onClick={() => startPayment(p)}
+                disabled={payingPaymentId === p._id}
+                style={{ background: "none", border: 0, padding: 0 }}
+              >
+                {payingPaymentId === p._id ? "Opening PayMongo..." : "Pay Now →"}
+              </button>
             </div>
           </div>
         ))}
